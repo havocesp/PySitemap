@@ -2,8 +2,9 @@ import urllib.request
 from urllib.parse import urlsplit, urlunsplit, urljoin, urlparse
 from urllib.error import URLError, HTTPError
 import re
-from datetime import datetime
+# from datetime import datetime
 import tldextract
+
 
 # https://github.com/Cartman720/PySitemap
 
@@ -12,48 +13,50 @@ class Crawler:
 
     def __init__(self, url, exclude=None, domain=None, no_verbose=False):
 
-        self.url = self.normalize(url)
-        self.host = urlparse(self.url).netloc
-        self.domain = domain if domain is not None else self.get_domain(self.url)
-        self.exclude = exclude
-        self.no_verbose = no_verbose
-        self.found_links = []
-        self.error_links = []
-        self.redirect_links = []
-        self.visited_links = [self.url]
+        self._url = self._normalize(url)
+        self._host = urlparse(self._url).netloc
+        self._domain = domain if domain is not None else self._get_domain(self._url)
+        self._exclude = exclude
+        self._no_verbose = no_verbose
+        self._found_links = []
+        self._error_links = []
+        self._redirect_links = []
+        self._visited_links = [self._url]
 
     def start(self):
-        self.crawl(self.url)
-        return self.found_links
+        self._crawl(self._url)
+        return self._found_links
 
-    def crawl(self, url):
-        if not self.no_verbose:
-            print(len(self.found_links), "Parsing: " + url)
+    def _crawl(self, url):
+        if not self._no_verbose:
+            print(len(self._found_links), "Parsing: " + url)
+
         try:
             response = urllib.request.urlopen(url)
         except HTTPError as e:
-            print('HTTP Error code: ', e.code, ' ', url)
-            self.add_url(url, self.error_links, self.exclude)
+            if not self._no_verbose:
+                print('HTTP Error code: ', e.code, ' ', url)
+            self._add_url(url, self._error_links, self._exclude)
         except URLError as e:
-            print('Error: Failed to reach server. ', e.reason)
+            if not self._no_verbose:
+                print('Error: Failed to reach server. ', e.reason)
         else:
-
             # Handle redirects
             if url != response.geturl():
-                self.add_url(url, self.redirect_links, self.exclude)
+                self._add_url(url, self._redirect_links, self._exclude)
                 url = response.geturl()
-                self.add_url(url, self.visited_links, self.exclude)
+                self._add_url(url, self._visited_links, self._exclude)
 
             # TODO Handle last modified
-            last_modified = response.info()['Last-Modified']
+            # last_modified = response.info()['Last-Modified']
             # Fri, 19 Oct 2018 18:49:51 GMT
-            if last_modified:
-                dateTimeObject = datetime.strptime(last_modified, '%a, %d %b %Y %H:%M:%S %Z')
-            #				print ("Last Modified:", dateTimeObject)
+            # if last_modified:
+            #     dateTimeObject = datetime.strptime(last_modified, '%a, %d %b %Y %H:%M:%S %Z')
+            #     print("Last Modified:", dateTimeObject)
 
             # TODO Handle priority
 
-            self.add_url(url, self.found_links, self.exclude)
+            self._add_url(url, self._found_links, self._exclude)
 
             page = str(response.read())
             pattern = '<a [^>]*href=[\'|"](.*?)[\'"].*?>'
@@ -62,46 +65,46 @@ class Crawler:
             links = []
 
             for link in page_links:
-                is_url = self.is_url(link)
-                link = self.normalize(link)
+                is_url = self._is_url(link)
+                link = self._normalize(link)
                 if is_url:
-                    if self.is_internal(link):
-                        self.add_url(link, links, self.exclude)
-                    elif self.is_relative(link):
+                    if self._is_internal(link):
+                        self._add_url(link, links, self._exclude)
+                    elif self._is_relative(link):
                         link = urljoin(url, link)
-                        self.add_url(link, links, self.exclude)
+                        self._add_url(link, links, self._exclude)
 
             for link in links:
-                if link not in self.visited_links:
-                    link = self.normalize(link)
-                    self.visited_links.append(link)
-                    self.crawl(link)
+                if link not in self._visited_links:
+                    link = self._normalize(link)
+                    self._visited_links.append(link)
+                    self._crawl(link)
 
-    def add_url(self, link, link_list, exclude_pattern=None):
-        link = self.normalize(link)
+    def _add_url(self, link, link_list, exclude_pattern=None):
+        link = self._normalize(link)
         if link:
             not_in_list = link not in link_list
+            
             excluded = False
-
             if exclude_pattern:
                 excluded = re.search(exclude_pattern, link)
 
             if not_in_list and not excluded:
                 link_list.append(link)
 
-    def normalize(self, url):
+    def _normalize(self, url):
         scheme, netloc, path, qs, anchor = urlsplit(url)
         # print(url, ' ', scheme, ' ', netloc, ' ', path, ' ', qs, ' ', anchor)
         anchor = ''
         return urlunsplit((scheme, netloc, path, qs, anchor))
 
-    def is_internal(self, url):
+    def _is_internal(self, url):
         host = urlparse(url).netloc
-        if self.domain:
-            return self.domain in host
-        return host == self.host
+        if self._domain:
+            return self._domain in host
+        return host == self._host
 
-    def is_relative(self, url):
+    def _is_relative(self, url):
         host = urlparse(url).netloc
         return host == ''
 
@@ -109,7 +112,7 @@ class Crawler:
     #	def same_domain(self, url):
     #		host = urlparse(url).netloc
 
-    def is_url(self, url):
+    def _is_url(self, url):
         scheme, netloc, path, qs, anchor = urlsplit(url)
 
         if url != '' and scheme in ['http', 'https', '']:
@@ -117,6 +120,6 @@ class Crawler:
         else:
             return False
 
-    def get_domain(self, url):
+    def _get_domain(self, url):
         sub, domain, suffix = tldextract.extract(url)
         return domain + '.' + suffix
