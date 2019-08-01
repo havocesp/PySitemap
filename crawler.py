@@ -10,8 +10,15 @@ import tldextract
 
 
 class Crawler:
+    _request_headers = {
+        "Accept-Language": "en-US,en;q=0.5",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Referer": "http://thewebsite.com",
+        "Connection": "keep-alive"
+    }
 
-    def __init__(self, url, exclude=None, domain=None, no_verbose=False):
+    def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None):
 
         self._url = self._normalize(url)
         self._host = urlparse(self._url).netloc
@@ -22,6 +29,8 @@ class Crawler:
         self._error_links = []
         self._redirect_links = []
         self._visited_links = [self._url]
+        if not request_header:
+            self._request_headers = request_header
 
     def start(self):
         self._crawl(self._url)
@@ -32,7 +41,8 @@ class Crawler:
             print(len(self._found_links), "Parsing: " + url)
 
         try:
-            response = urllib.request.urlopen(url)
+            request = urllib.request.Request(url, headers=self._request_headers)
+            response = urllib.request.urlopen(request)
         except HTTPError as e:
             if not self._no_verbose:
                 print('HTTP Error code: ', e.code, ' ', url)
