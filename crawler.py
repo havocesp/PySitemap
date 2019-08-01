@@ -29,7 +29,7 @@ class Crawler:
         self._error_links = []
         self._redirect_links = []
         self._visited_links = [self._url]
-        if not request_header:
+        if request_header:
             self._request_headers = request_header
 
     def start(self):
