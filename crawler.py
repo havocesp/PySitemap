@@ -45,6 +45,8 @@ class Crawler:
             if url != response.geturl():
                 self._add_url(url, self._redirect_links, self._exclude)
                 url = response.geturl()
+                if not self._same_domain(url):
+                    return
                 self._add_url(url, self._visited_links, self._exclude)
 
             # TODO Handle last modified
@@ -108,13 +110,16 @@ class Crawler:
         host = urlparse(url).netloc
         return host == ''
 
-    #	TODO Proper related domain/ subdomains check
-    #	def same_domain(self, url):
-    #		host = urlparse(url).netloc
+    def _same_domain(self, url):
+        domain = self._get_domain(url)
+        if domain and domain is self._domain:
+            return True
+        elif urlparse(url).netloc is self._host:
+            return True
+        return False
 
     def _is_url(self, url):
         scheme, netloc, path, qs, anchor = urlsplit(url)
-
         if url != '' and scheme in ['http', 'https', '']:
             return True
         else:
@@ -122,4 +127,6 @@ class Crawler:
 
     def _get_domain(self, url):
         sub, domain, suffix = tldextract.extract(url)
-        return domain + '.' + suffix
+        if domain and suffix:
+            return domain + '.' + suffix
+        return None
