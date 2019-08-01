@@ -23,7 +23,7 @@ class Crawler:
         self._url = self._normalize(url)
         self._host = urlparse(self._url).netloc
         self._domain = domain if domain is not None else self._get_domain(self._url)
-        self._exclude = exclude
+        self._exclude = exclude.split() if exclude else None
         self._no_verbose = no_verbose
         self._found_links = []
         self._error_links = []
@@ -46,18 +46,18 @@ class Crawler:
         except HTTPError as e:
             if not self._no_verbose:
                 print('HTTP Error code: ', e.code, ' ', url)
-            self._add_url(url, self._error_links, self._exclude)
+            self._add_url(url, self._error_links)
         except URLError as e:
             if not self._no_verbose:
                 print('Error: Failed to reach server. ', e.reason)
         else:
             # Handle redirects
             if url != response.geturl():
-                self._add_url(url, self._redirect_links, self._exclude)
+                self._add_url(url, self._redirect_links)
                 url = response.geturl()
                 if not self._same_domain(url):
                     return
-                self._add_url(url, self._visited_links, self._exclude)
+                self._add_url(url, self._visited_links)
 
             # TODO Handle last modified
             # last_modified = response.info()['Last-Modified']
@@ -68,7 +68,7 @@ class Crawler:
 
             # TODO Handle priority
 
-            self._add_url(url, self._found_links, self._exclude)
+            self._add_url(url, self._found_links)
 
             page = str(response.read())
             pattern = '<a [^>]*href=[\'|"](.*?)[\'"].*?>'
@@ -81,10 +81,10 @@ class Crawler:
                 link = self._normalize(link)
                 if is_url:
                     if self._is_internal(link):
-                        self._add_url(link, links, self._exclude)
+                        self._add_url(link, links)
                     elif self._is_relative(link):
                         link = urljoin(url, link)
-                        self._add_url(link, links, self._exclude)
+                        self._add_url(link, links)
 
             for link in links:
                 if link not in self._visited_links:
@@ -92,14 +92,15 @@ class Crawler:
                     self._visited_links.append(link)
                     self._crawl(link)
 
-    def _add_url(self, link, link_list, exclude_pattern=None):
+    def _add_url(self, link, link_list):
         link = self._normalize(link)
         if link:
             not_in_list = link not in link_list
             
             excluded = False
-            if exclude_pattern:
-                excluded = re.search(exclude_pattern, link)
+            if self._exclude:
+                for pattern in self._exclude:
+                    excluded |= (re.search(pattern, link) is not None)
 
             if not_in_list and not excluded:
                 link_list.append(link)
