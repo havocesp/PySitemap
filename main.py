@@ -21,8 +21,8 @@ url = args.url
 
 found_links = []
 
-# initializeing crawler
-crawler = Crawler(url, exclude=args.exclude, domain=args.domain, no_verbose=args.no_verbose);
+# initializing crawler
+crawler = Crawler(url, exclude=args.exclude, domain=args.domain, no_verbose=args.no_verbose)
 
 # fetch links
 links = crawler.start()
