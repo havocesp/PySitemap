@@ -31,6 +31,8 @@ class Crawler:
         self._visited_links = [self._url]
         if request_header:
             self._request_headers = request_header
+        if request_header is not None and not request_header:
+            self._request_headers = None
 
     def start(self):
         self._crawl(self._url)
@@ -40,17 +42,8 @@ class Crawler:
         if not self._no_verbose:
             print(len(self._found_links), 'Parsing: ' + url)
 
-        try:
-            request = urllib.request.Request(url, headers=self._request_headers)
-            response = urllib.request.urlopen(request)
-        except HTTPError as e:
-            if not self._no_verbose:
-                print('HTTP Error code: ', e.code, ' ', url)
-            self._add_url(url, self._error_links)
-        except URLError as e:
-            if not self._no_verbose:
-                print('Error: Failed to reach server. ', e.reason)
-        else:
+        response = self._request(url)
+        if response:
             # Handle redirects
             if url != response.geturl():
                 self._add_url(url, self._redirect_links)
@@ -92,18 +85,34 @@ class Crawler:
                     self._visited_links.append(link)
                     self._crawl(link)
 
-    def _add_url(self, link, link_list):
-        link = self._normalize(link)
-        if link:
-            not_in_list = link not in link_list
+    def _request(self, url):
+        try:
+            if self._request_headers:
+                request = urllib.request.Request(url, headers=self._request_headers)
+            else:
+                request = urllib.request.Request(url)
+            return urllib.request.urlopen(request)
+        except HTTPError as e:
+            if not self._no_verbose:
+                print('HTTP Error code: ', e.code, ' ', url)
+            self._add_url(url, self._error_links)
+        except URLError as e:
+            if not self._no_verbose:
+                print('Error: Failed to reach server. ', e.reason)
+        return None
+
+    def _add_url(self, url, url_list):
+        url = self._normalize(url)
+        if url:
+            not_in_list = url not in url_list
             
             excluded = False
             if self._exclude:
                 for pattern in self._exclude:
-                    excluded |= (re.search(pattern, link) is not None)
+                    excluded |= (re.search(pattern, url) is not None)
 
             if not_in_list and not excluded:
-                link_list.append(link)
+                url_list.append(url)
 
     def _normalize(self, url):
         scheme, netloc, path, qs, anchor = urlsplit(url)
