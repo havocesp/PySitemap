@@ -41,7 +41,7 @@ class Crawler:
 
     def _crawl(self, urls):
         if not self._no_verbose:
-            print(len(self._found_links), 'Parsing: ' + urls)
+            print(len(self._found_links), 'Parsing: ', urls)
 
         responses = self._request(urls)
 
@@ -90,12 +90,12 @@ class Crawler:
                 response.raise_for_status()
                 return url, await response.read()
 
-        async def looper():
+        async def __fetch_all():
             async with aiohttp.ClientSession() as session:
                 return await asyncio.gather(*[asyncio.create_task(__fetch(session, url)) for url in urls])
 
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(looper())
+        task = asyncio.get_event_loop()
+        return task.run_until_complete(__fetch_all())
 
     def _add_url(self, url, url_list):
         url = self._normalize(url)
