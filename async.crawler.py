@@ -1,7 +1,7 @@
 from urllib.parse import urlsplit, urlunsplit, urljoin, urlparse
 import aiohttp
 from aiohttp import ClientResponseError, ClientError, ClientConnectionError, ClientOSError, ServerConnectionError
-from aiohttp.client import DEFAULT_TIMEOUT
+from aiohttp.client import ClientTimeout
 import asyncio
 import re
 # from datetime import datetime
@@ -12,6 +12,7 @@ import tldextract
 
 
 class Crawler:
+    DEFAULT_TIMEOUT = ClientTimeout(total=5*60)
     _request_headers = {
         'Accept-Language': 'en-US,en;q=0.5',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0',
@@ -21,7 +22,7 @@ class Crawler:
     }
 
     def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None,
-                 read_timeout=DEFAULT_TIMEOUT, conn_timeout=None, timeout=DEFAULT_TIMEOUT):
+                 read_timeout=DEFAULT_TIMEOUT, conn_timeout=None, timeout=DEFAULT_TIMEOUT, retry_times=0):
 
         self._url = self._normalize(url)
         self._host = urlparse(self._url).netloc
@@ -38,11 +39,16 @@ class Crawler:
         self._read_timeout = read_timeout
         self._conn_timeout = conn_timeout
         self._timeout = timeout
+        self.retry_times = retry_times
 
     def start(self):
         self._crawl([self._url])
         if not self._no_verbose:
             print('Failed to parse: ', self._error_links)
+        while self.retry_times > 0 and self._error_links:
+            urls = self._error_links
+            self._error_links = []
+            self._crawl(urls)
         return self._found_links
 
     def _crawl(self, urls):
