@@ -38,6 +38,8 @@ class Crawler:
 
     def start(self):
         self._crawl([self._url])
+        if not self._no_verbose:
+            print('Failed to parse: ', self._error_links)
         return self._found_links
 
     def _crawl(self, urls):
