@@ -51,7 +51,7 @@ class Crawler:
         if responses:
             links = []
             for index, (url, html) in enumerate(responses):
-                if url and html:
+                if url:
                     # Handle redirects
                     if urls[index] != url:
                         self._add_url(urls[index], self._found_links)
@@ -68,6 +68,9 @@ class Crawler:
                     # TODO Handle priority
 
                     self._add_url(url, self._found_links)
+
+                    if not html:
+                        continue
 
                     page = str(html)
                     pattern = '<a [^>]*href=[\'|"](.*?)[\'"].*?>'
