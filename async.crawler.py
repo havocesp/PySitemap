@@ -9,6 +9,7 @@ import tldextract
 
 
 # https://github.com/Cartman720/PySitemap
+from aiohttp import ClientResponseError
 
 
 class Crawler:
@@ -47,7 +48,7 @@ class Crawler:
 
         if responses:
             links = []
-            for index, url, html in enumerate(responses):
+            for index, (url, html) in enumerate(responses):
                 if url and html:
                     # Handle redirects
                     if urls[index] != url:
@@ -87,8 +88,14 @@ class Crawler:
     def _request(self, urls):
         async def __fetch(session, url):
             async with session.get(url) as response:
-                response.raise_for_status()
-                return url, await response.read()
+                try:
+                    response.raise_for_status()
+                    return url, await response.read()
+                except ClientResponseError as e:
+                    if not self._no_verbose:
+                        print('HTTP Error code=', e, ' ', url)
+                    self._add_url(url, self._error_links)
+                    return None, None
 
         async def __fetch_all():
             async with aiohttp.ClientSession() as session:
