@@ -27,7 +27,7 @@ class Crawler:
         self._no_verbose = no_verbose
         self._found_links = []
         self._error_links = []
-        # self._redirect_links = []
+        self._redirect_links = []
         if request_header:
             self._request_headers = request_header
         if request_header is not None and not request_header:
@@ -35,7 +35,7 @@ class Crawler:
 
     def start(self):
         self._crawl(self._url)
-        return self._found_links
+        return self._found_links + self._redirect_links
 
     def _crawl(self, url):
         if not self._no_verbose:
@@ -45,9 +45,9 @@ class Crawler:
         if response:
             # Handle redirects
             if url != response.geturl():
-                # self._add_url(url, self._redirect_links)
+                self._add_url(url, self._redirect_links)
                 url = response.geturl()
-                if not self._same_domain(url):
+                if not self._same_domain(url) or url in self._found_links:
                     return
 
             # TODO Handle last modified
@@ -79,7 +79,6 @@ class Crawler:
 
             for link in links:
                 if link not in self._found_links:
-                    self._found_links.append(link)
                     self._crawl(link)
 
     def _request(self, url):
