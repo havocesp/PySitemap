@@ -22,7 +22,7 @@ class Crawler:
     }
 
     def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None,
-                 read_timeout=DEFAULT_TIMEOUT, conn_timeout=None, timeout=DEFAULT_TIMEOUT, retry_times=0):
+                 timeout=DEFAULT_TIMEOUT, retry_times=0):
 
         self._url = self._normalize(url)
         self._host = urlparse(self._url).netloc
@@ -36,8 +36,6 @@ class Crawler:
             self._request_headers = request_header
         if request_header is not None and not request_header:
             self._request_headers = None
-        self._read_timeout = read_timeout
-        self._conn_timeout = conn_timeout
         self._timeout = timeout
         self.retry_times = retry_times
 
@@ -114,8 +112,7 @@ class Crawler:
 
         async def __fetch_all():
             if self._timeout:
-                async with aiohttp.ClientSession(read_timeout=self._read_timeout, conn_timeout=self._conn_timeout,
-                                                 timeout=self._timeout, headers=self._request_headers) as session:
+                async with aiohttp.ClientSession(timeout=self._timeout, headers=self._request_headers) as session:
                     return await asyncio.gather(*[asyncio.create_task(__fetch(session, url)) for url in urls])
 
         task = asyncio.get_event_loop()
