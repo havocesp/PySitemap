@@ -26,7 +26,27 @@ By default program will print parsing urls in console, but if you want to run si
 python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --no-verbose
 ```
 
-If you want to restrict some urls from being visited by crawler you can exclude them with regex pattern using `--exclude` option. Below code will exclude `png` or `jpg` files.
+If you want to restrict some urls from being visited by crawler you can exclude them with regex pattern using `--exclude` option. Below code will exclude `png` or `jpg` files
 ```
 python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --exclude="\.jpg|\.png"
+```
+
+You can also use several filters to exclude
+```
+python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --exclude=".jpg .png"
+```
+
+You can run the crawler asynchronously (experimental)
+```
+python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --asynchronous
+```
+
+You can specify timeout for http requests (onlt in asynchronous mode)
+```
+python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --timeout=300
+```
+
+You can specify how many times should we retry urls that returned with errors (onlt in asynchronous mode)
+```
+python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --retry=1
 ```
