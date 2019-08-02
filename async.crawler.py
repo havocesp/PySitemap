@@ -1,7 +1,7 @@
-import urllib.request
 from urllib.parse import urlsplit, urlunsplit, urljoin, urlparse
-from urllib.error import URLError, HTTPError
 import aiohttp
+from aiohttp import ClientResponseError, ClientError, ClientConnectionError, ClientOSError, ServerConnectionError
+from aiohttp.client import DEFAULT_TIMEOUT
 import asyncio
 import re
 # from datetime import datetime
@@ -9,7 +9,6 @@ import tldextract
 
 
 # https://github.com/Cartman720/PySitemap
-from aiohttp import ClientResponseError
 
 
 class Crawler:
@@ -21,7 +20,8 @@ class Crawler:
         'Connection': 'keep-alive'
     }
 
-    def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None):
+    def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None,
+                 read_timeout=DEFAULT_TIMEOUT, conn_timeout=None, timeout=DEFAULT_TIMEOUT):
 
         self._url = self._normalize(url)
         self._host = urlparse(self._url).netloc
@@ -35,6 +35,9 @@ class Crawler:
             self._request_headers = request_header
         if request_header is not None and not request_header:
             self._request_headers = None
+        self._read_timeout = read_timeout
+        self._conn_timeout = conn_timeout
+        self._timeout = timeout
 
     def start(self):
         self._crawl([self._url])
@@ -92,19 +95,22 @@ class Crawler:
 
     def _request(self, urls):
         async def __fetch(session, url):
-            async with session.get(url) as response:
+            async with session.post().get(url) as response:
                 try:
                     response.raise_for_status()
                     return url, await response.read()
-                except ClientResponseError as e:
+                except (ClientResponseError, ClientError, ClientConnectionError, ClientOSError,
+                        ServerConnectionError) as e:
                     if not self._no_verbose:
                         print('HTTP Error code=', e, ' ', url)
                     self._add_url(url, self._error_links)
                     return None, None
 
         async def __fetch_all():
-            async with aiohttp.ClientSession() as session:
-                return await asyncio.gather(*[asyncio.create_task(__fetch(session, url)) for url in urls])
+            if self._timeout:
+                async with aiohttp.ClientSession(read_timeout=self._read_timeout, conn_timeout=self._conn_timeout,
+                                                 timeout=self._timeout, headers=self._request_headers) as session:
+                    return await asyncio.gather(*[asyncio.create_task(__fetch(session, url)) for url in urls])
 
         task = asyncio.get_event_loop()
         return task.run_until_complete(__fetch_all())
