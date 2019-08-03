@@ -22,7 +22,7 @@ class Crawler:
     }
 
     def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None,
-                 timeout=DEFAULT_TIMEOUT, retry_times=0):
+                 timeout=DEFAULT_TIMEOUT, retry_times=0, max_requests=250):
 
         self._url = self._normalize(url)
         self._host = urlparse(self._url).netloc
@@ -36,8 +36,9 @@ class Crawler:
             self._request_headers = request_header
         if request_header is not None and not request_header:
             self._request_headers = None
-        self._timeout = timeout
-        self.retry_times = retry_times
+        self._timeout = timeout if timeout else self.DEFAULT_TIMEOUT
+        self._retry_times = retry_times
+        self._max_requests = max_requests if max_requests else 250
 
     def start(self):
         if not self._url:
@@ -45,7 +46,7 @@ class Crawler:
         self._crawl([self._url])
         if not self._no_verbose:
             print('Failed to parse: ', self._error_links)
-        while self.retry_times > 0 and self._error_links:
+        while self._retry_times > 0 and self._error_links:
             urls = self._error_links
             self._error_links = []
             self._crawl(urls)
@@ -97,11 +98,18 @@ class Crawler:
                                 self._add_url(link, links)
 
             links = [link for link in links if link not in self._found_links]
-            self._crawl(links)
+            chunks = self._chunks(links, self._max_requests)
+
+            for chunk in chunks:
+                self._crawl(chunk)
+
+    def _chunks(self, l, n):
+        for i in range(0, len(l), n):
+            yield l[i:i + n]
 
     def _request(self, urls):
         async def __fetch(session, url):
-            async with session.post().get(url) as response:
+            async with session.get(url) as response:
                 try:
                     response.raise_for_status()
                     return url, await response.read()

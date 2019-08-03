@@ -41,12 +41,17 @@ You can run the crawler asynchronously (experimental)
 python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --asynchronous
 ```
 
-You can specify timeout for http requests (onlt in asynchronous mode)
+You can specify timeout for http requests (only in asynchronous mode)
 ```
 python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --timeout=300
 ```
 
-You can specify how many times should we retry urls that returned with errors (onlt in asynchronous mode)
+You can specify how many times should we retry urls that returned with errors (only in asynchronous mode)
 ```
 python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --retry=1
+```
+
+You can specify the maximum numbers of simultaneous get requests the crawler can send (only in asynchronous mode)
+```
+python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --max-requests=250
 ```

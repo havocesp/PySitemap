@@ -19,6 +19,8 @@ parser.add_argument('--domain', action='store', default='', help='include subdom
 parser.add_argument('--asynchronous', action='store_true', default='', help='should request asynchronously')
 parser.add_argument('--timeout', action='store', default=300, help='timeout in seconds')
 parser.add_argument('--retry', action='store', default=0, help='times to retry url that returned an error')
+parser.add_argument('--max-requests', action='store', default=250,
+                    help='maximum simultaneous get requests allowed (sending too many results in failed some requests)')
 
 # parsing parameters
 args = parser.parse_args()
@@ -30,7 +32,7 @@ found_links = []
 crawler = None
 if args.asynchronous:
     crawler = AsyncCrawler(url, exclude=args.exclude, domain=args.domain, no_verbose=args.no_verbose,
-                           timeout=args.timeout, retry_times=args.retry)
+                           timeout=args.timeout, retry_times=args.retry, max_requests=args.max_requests)
 else:
     crawler = Crawler(url, exclude=args.exclude, domain=args.domain, no_verbose=args.no_verbose)
 
