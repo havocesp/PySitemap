@@ -40,6 +40,8 @@ class Crawler:
         self.retry_times = retry_times
 
     def start(self):
+        if not self._url:
+            return None
         self._crawl([self._url])
         if not self._no_verbose:
             print('Failed to parse: ', self._error_links)
