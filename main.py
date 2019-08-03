@@ -1,5 +1,6 @@
 import argparse
 from crawler import Crawler
+from async_crawler import Crawler as AsyncCrawler
 import ssl
 
 # monkey patch ssl
@@ -10,11 +11,14 @@ ssl.match_hostname = lambda cert, hostname: True
 parser = argparse.ArgumentParser(description='Sitemap generator')
 parser.add_argument('--url', action='store', default='', help='For example https://www.finstead.com')
 parser.add_argument('--exclude', action='store', default='',
-                    help="regex pattern to exclude. For example 'symbol/info' will exclude https://www.finstead.com/symbol/info/ORCL")
+                    help="regex patterns to exclude, separated by white spaces. For example 'symbol/info questions' will exclude https://www.finstead.com/symbol/info/ORCL and https://www.finstead.com/questions")
 parser.add_argument('--no-verbose', action='store_true', default='', help='print verbose output')
 parser.add_argument('--output', action='store', default='sitemap.xml',
                     help='File path for output, if file exists it will be overwritten')
 parser.add_argument('--domain', action='store', default='', help='include subdomains of domain in search')
+parser.add_argument('--asynchronous', action='store_true', default='', help='should request asynchronously')
+parser.add_argument('--timeout', action='store', default=300, help='timeout in seconds')
+parser.add_argument('--retry', action='store', default=0, help='times to retry url that returned an error')
 
 # parsing parameters
 args = parser.parse_args()
@@ -23,7 +27,12 @@ url = args.url
 found_links = []
 
 # initializing crawler
-crawler = Crawler(url, exclude=args.exclude, domain=args.domain, no_verbose=args.no_verbose)
+crawler = None
+if args.asynchronous:
+    crawler = AsyncCrawler(url, exclude=args.exclude, domain=args.domain, no_verbose=args.no_verbose,
+                           timeout=args.timeout, retry_times=args.retry)
+else:
+    crawler = Crawler(url, exclude=args.exclude, domain=args.domain, no_verbose=args.no_verbose)
 
 # fetch links
 links = crawler.start()
