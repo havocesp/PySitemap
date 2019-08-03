@@ -266,3 +266,9 @@ fabric.properties
 __pycache__/
 *.py[cod]
 /venv
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/inspectionProfiles/Project_Default.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/PySitemap.iml
+.idea/vcs.xml
