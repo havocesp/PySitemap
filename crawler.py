@@ -34,6 +34,8 @@ class Crawler:
             self._request_headers = None
 
     def start(self):
+        if not self._url:
+            return None
         self._crawl(self._url)
         return self._found_links
 
