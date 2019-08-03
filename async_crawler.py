@@ -52,6 +52,17 @@ class Crawler:
             self._crawl(urls)
         return self._found_links
 
+    def generate_sitemap(self):
+        sitemap = '''<?xml version="1.0" encoding="UTF-8"?>
+        <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
+            xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'''
+        for url in self._found_links:
+            sitemap += "\n\t<url>\n\t\t<loc>{0}</loc>\n\t</url>".format(url)
+        sitemap += '\n</urlset>'
+        return sitemap
+
     def _crawl(self, urls):
         if not self._no_verbose:
             print(len(self._found_links), 'Parsing: ', urls)
