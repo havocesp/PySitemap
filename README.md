@@ -6,7 +6,7 @@ Simple sitemap generator with Python 3
 This is simple and easy sitemap generator written in python which can help you easily create sitemap of your website for SEO and other purposes.
 
 ## Options
-Simply you can run with thisthis command and program will create sitemap.xml with links from url option
+Simply you can run with this command and program will create sitemap.xml with links from url option
 ```
 python main.py --url="https://www.finstead.com"
 ```
@@ -16,12 +16,12 @@ If you want the search to include all subdomains like docs.finstead.com
 python main.py --url="https://www.finstead.com" --domain="finstead.com"
 ```
 
-If you want custome path for sitemap file you can add `--output` option like below
+If you want custom path for sitemap file you can add `--output` option like below
 ```
 python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml"
 ```
 
-By default program will print parsing urls in console, but if you want to run siletnly you can add `--no-verbose` option.
+By default program will print parsing urls in console, but if you want to run silently you can add `--no-verbose` option.
 ```
 python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --no-verbose
 ```
@@ -55,3 +55,21 @@ You can specify the maximum numbers of simultaneous get requests the crawler can
 ```
 python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --max-requests=250
 ```
+
+## Usage
+
+```python
+from async_crawler import Crawler
+# or 
+# from crawler import Crawler
+
+crawler = Crawler(url, exclude=exclude, domain=domain, no_verbose=True,
+                  timeout=300, retry_times=1, max_requests=250)
+
+with open('sitemap.xml', 'w') as file:
+    file.write(crawler.generate_sitemap())
+```
+
+## Notice
+
+This code is a fork of https://github.com/Cartman720/PySitemap and https://github.com/swi-infra/PySitemap
