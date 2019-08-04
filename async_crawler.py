@@ -24,7 +24,7 @@ class Crawler:
     }
 
     def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None,
-                 timeout=DEFAULT_TIMEOUT, retry_times=1, max_requests=250, build_graph=False):
+                 timeout=DEFAULT_TIMEOUT, retry_times=1, max_requests=100, build_graph=False):
 
         self._url = self._normalize(url)
         self._host = urlparse(self._url).netloc
@@ -40,7 +40,7 @@ class Crawler:
             self._request_headers = None
         self._timeout = timeout if timeout else self.DEFAULT_TIMEOUT
         self._retry_times = retry_times if retry_times > 0 else 1
-        self._max_requests = max_requests if max_requests else 250
+        self._max_requests = max_requests if max_requests else 100
         if build_graph:
             self._graph = {'HEAD': set(url)}
         else:

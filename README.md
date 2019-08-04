@@ -64,7 +64,7 @@ from async_crawler import Crawler
 # from crawler import Crawler
 
 crawler = Crawler(url, exclude=exclude, domain=domain, no_verbose=True,
-                  timeout=300, retry_times=1, max_requests=250)
+                  timeout=300, retry_times=1, max_requests=100)
 
 with open('sitemap.xml', 'w') as file:
     file.write(crawler.generate_sitemap())
