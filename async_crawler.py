@@ -77,7 +77,6 @@ class Crawler:
             print(len(self._found_links), 'Parsing: ', urls)
         responses = self._request(urls)
         if responses:
-            links = []
             for (requested_url, url, html) in responses:
                 if url:
                     # Handle redirects
@@ -104,17 +103,17 @@ class Crawler:
                     page = str(html)
                     pattern = '<a [^>]*href=[\'|"](.*?)[\'"].*?>'
 
-                    page_links = []
+                    links = []
 
                     for link in re.findall(pattern, page):
                         is_url = self._is_url(link)
                         link = self._normalize(link)
                         if is_url:
                             if self._is_internal(link):
-                                self._add_url(link, page_links)
+                                self._add_url(link, links)
                             elif self._is_relative(link):
                                 link = urljoin(url, link)
-                                self._add_url(link, page_links)
+                                self._add_url(link, links)
 
                     if source is not None:
                         self._add_all_graph(source, links)
@@ -135,7 +134,7 @@ class Crawler:
                 async with session.get(url) as response:
                     try:
                         response.raise_for_status()
-                        return url, response.url, await response.read()
+                        return url, response.url.human_repr(), await response.read()
                     except (ClientResponseError, ClientError, ClientConnectionError, ClientOSError,
                             ServerConnectionError) as e:
                         if not self._no_verbose:
