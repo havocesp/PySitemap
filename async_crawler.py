@@ -66,6 +66,10 @@ class Crawler:
         return sitemap
 
     def generate_graph(self):
+        try:
+            self._graph.pop('HEAD')
+        except KeyError:
+            pass
         return self._graph
 
     def _crawl(self, source, urls):
