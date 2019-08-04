@@ -141,7 +141,7 @@ class Crawler:
                             print('HTTP Error code=', e, ' ', url)
                         if tries_left == 0:
                             self._add_url(url, self._error_links)
-                            return None, None
+                            return None, None, None
 
         async def __fetch_all():
             if self._timeout:
