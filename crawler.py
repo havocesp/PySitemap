@@ -59,7 +59,7 @@ class Crawler:
     def generate_graph(self):
         try:
             self._graph.pop('HEAD')
-        except KeyError:
+        except (KeyError, AttributeError):
             pass
         return self._graph
 
