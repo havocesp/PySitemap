@@ -23,37 +23,37 @@ python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.x
 
 By default program will print parsing urls in console, but if you want to run silently you can add `--no-verbose` option.
 ```
-python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --no-verbose
+python main.py --url="https://www.finstead.com" --no-verbose
 ```
 
 If you want to restrict some urls from being visited by crawler you can exclude them with regex pattern using `--exclude` option. Below code will exclude `png` or `jpg` files
 ```
-python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --exclude="\.jpg|\.png"
+python main.py --url="https://www.finstead.com" --exclude="\.jpg|\.png"
 ```
 
 You can also use several filters to exclude
 ```
-python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --exclude=".jpg .png"
+python main.py --url="https://www.finstead.com" --exclude=".jpg .png"
 ```
 
 You can run the crawler asynchronously (experimental)
 ```
-python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --asynchronous
+python main.py --url="https://www.finstead.com" --asynchronous
 ```
 
 You can specify timeout for http requests (only in asynchronous mode)
 ```
-python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --timeout=300
+python main.py --url="https://www.finstead.com" --timeout=300
 ```
 
 You can specify how many times should we retry urls that returned with errors (only in asynchronous mode)
 ```
-python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --retry=1
+python main.py --url="https://www.finstead.com" --retry=1
 ```
 
 You can specify the maximum numbers of simultaneous get requests the crawler can send (only in asynchronous mode)
 ```
-python main.py --url="https://www.finstead.com" --output="/custom/path/sitemap.xml" --max-requests=250
+python main.py --url="https://www.finstead.com" --max-requests=100
 ```
 
 ## Usage
@@ -64,10 +64,16 @@ from async_crawler import Crawler
 # from crawler import Crawler
 
 crawler = Crawler(url, exclude=exclude, domain=domain, no_verbose=True,
-                  timeout=300, retry_times=1, max_requests=100)
+                  timeout=300, retry_times=1, max_requests=100, build_graph=True)
 
 with open('sitemap.xml', 'w') as file:
     file.write(crawler.generate_sitemap())
+
+# You can also generate a graph (in json and gexf formats)
+from visualize import visualize
+graph = crawler.generate_graph()
+# This will generate graph.json and graph.gexf files in the given directory
+visualize(graph, dir_path)
 ```
 
 ## Notice
