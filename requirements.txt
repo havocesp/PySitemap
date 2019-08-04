@@ -1,0 +1,8 @@
+# Used only if async_crawler is used:
+tldextract==2.2.1
+aiohttp==3.5.4
+
+# Only used if visualizing sitemap in a graph:
+networkx==2.3
+ujson==1.35
+matplotlib==3.1.0
