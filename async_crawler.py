@@ -49,7 +49,7 @@ class Crawler:
     def start(self):
         if not self._url:
             return None
-        self._crawl(None, [self._url])
+        self._crawl([self._url])
         if not self._no_verbose:
             print('Failed to parse: ', self._error_links)
         return self._found_links
@@ -72,7 +72,8 @@ class Crawler:
             pass
         return self._graph
 
-    def _crawl(self, source, urls):
+    def _crawl(self, urls):
+        tasks = []
         if not self._no_verbose:
             print(len(self._found_links), 'Parsing: ', urls)
         responses = self._request(urls)
@@ -115,14 +116,16 @@ class Crawler:
                                 link = urljoin(url, link)
                                 self._add_url(link, links)
 
-                    if source is not None:
-                        self._add_all_graph(source, links)
+                    self._add_all_graph(url, links)
 
-                    links = [link for link in links if link not in self._found_links]
-                    chunks = self._chunks(links, self._max_requests)
+                    links = [link for link in links if link not in self._found_links and link not in urls]
 
-                    for chunk in chunks:
-                        self._crawl(url, chunk)
+                    tasks += links
+
+        if tasks:
+            chunks = self._chunks(tasks, self._max_requests)
+            for chunk in chunks:
+                self._crawl(chunk)
 
     def _chunks(self, l, n):
         for i in range(0, len(l), n):
@@ -141,7 +144,7 @@ class Crawler:
                             print('HTTP Error code=', e, ' ', url)
                         if tries_left == 0:
                             self._add_url(url, self._error_links)
-                            return None, None, None
+                            return url, None, None
 
         async def __fetch_all():
             if self._timeout:
