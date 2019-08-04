@@ -39,7 +39,7 @@ class Crawler:
         if request_header is not None and not request_header:
             self._request_headers = None
         self._timeout = timeout if timeout else self.DEFAULT_TIMEOUT
-        self._retry_times = retry_times
+        self._retry_times = retry_times if retry_times > 0 else 1
         self._max_requests = max_requests if max_requests else 250
         self._graph = {}
 
@@ -49,10 +49,6 @@ class Crawler:
         self._crawl(None, [self._url])
         if not self._no_verbose:
             print('Failed to parse: ', self._error_links)
-        while self._retry_times > 0 and self._error_links:
-            urls = self._error_links
-            self._error_links = []
-            self._crawl(urls)
         return self._found_links
 
     def generate_sitemap(self):
@@ -128,16 +124,18 @@ class Crawler:
 
     def _request(self, urls):
         async def __fetch(session, url):
-            async with session.get(url) as response:
-                try:
-                    response.raise_for_status()
-                    return url, response.url, await response.read()
-                except (ClientResponseError, ClientError, ClientConnectionError, ClientOSError,
-                        ServerConnectionError) as e:
-                    if not self._no_verbose:
-                        print('HTTP Error code=', e, ' ', url)
-                    self._add_url(url, self._error_links)
-                    return None, None
+            for tries_left in reversed(range(0, self._retry_times)):
+                async with session.get(url) as response:
+                    try:
+                        response.raise_for_status()
+                        return url, response.url, await response.read()
+                    except (ClientResponseError, ClientError, ClientConnectionError, ClientOSError,
+                            ServerConnectionError) as e:
+                        if not self._no_verbose:
+                            print('HTTP Error code=', e, ' ', url)
+                        if tries_left == 0:
+                            self._add_url(url, self._error_links)
+                            return None, None
 
         async def __fetch_all():
             if self._timeout:
