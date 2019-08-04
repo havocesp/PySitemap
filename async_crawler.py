@@ -42,7 +42,7 @@ class Crawler:
         self._retry_times = retry_times if retry_times > 0 else 1
         self._max_requests = max_requests if max_requests else 250
         if build_graph:
-            self._graph = {'HEAD', url}
+            self._graph = {'HEAD', set(url)}
         else:
             self._graph = None
 

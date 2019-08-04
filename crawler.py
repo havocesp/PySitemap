@@ -35,7 +35,7 @@ class Crawler:
         if request_header is not None and not request_header:
             self._request_headers = None
         if build_graph:
-            self._graph = {'HEAD', url}
+            self._graph = {'HEAD', set(url)}
         else:
             self._graph = None
 
