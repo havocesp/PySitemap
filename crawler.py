@@ -20,7 +20,7 @@ class Crawler:
         'Connection': 'keep-alive'
     }
 
-    def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None):
+    def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None, build_graph=False):
 
         self._url = self._normalize(url)
         self._host = urlparse(self._url).netloc
@@ -34,7 +34,10 @@ class Crawler:
             self._request_headers = request_header
         if request_header is not None and not request_header:
             self._request_headers = None
-        self._graph = {}
+        if build_graph:
+            self._graph = {'HEAD', url}
+        else:
+            self._graph = None
 
     def start(self):
         if not self._url:
@@ -137,6 +140,8 @@ class Crawler:
         self._add_all_graph(source, [url])
 
     def _add_all_graph(self, source, urls):
+        if not self._graph:
+            return
         if source not in self._graph:
             self._graph[source] = set()
         self._graph[source].update(urls)
