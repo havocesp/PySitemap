@@ -39,11 +39,12 @@ class Crawler:
         self._timeout = timeout if timeout else self.DEFAULT_TIMEOUT
         self._retry_times = retry_times
         self._max_requests = max_requests if max_requests else 250
+        self._graph = {}
 
     def start(self):
         if not self._url:
             return None
-        self._crawl([self._url])
+        self._crawl(None, [self._url])
         if not self._no_verbose:
             print('Failed to parse: ', self._error_links)
         while self._retry_times > 0 and self._error_links:
@@ -63,19 +64,21 @@ class Crawler:
         sitemap += '\n</urlset>'
         return sitemap
 
-    def _crawl(self, urls):
+    def generate_graph(self):
+        return self._graph
+
+    def _crawl(self, source, urls):
         if not self._no_verbose:
             print(len(self._found_links), 'Parsing: ', urls)
-
         responses = self._request(urls)
-
         if responses:
             links = []
-            for index, (url, html) in enumerate(responses):
+            for (requested_url, url, html) in responses:
                 if url:
                     # Handle redirects
-                    if urls[index] != url:
-                        self._add_url(urls[index], self._found_links)
+                    if requested_url != url:
+                        self._add_url(requested_url, self._found_links)
+                        self._add_graph(requested_url, url)
                         if not self._same_domain(url):
                             continue
 
@@ -96,23 +99,26 @@ class Crawler:
                     page = str(html)
                     pattern = '<a [^>]*href=[\'|"](.*?)[\'"].*?>'
 
-                    page_links = re.findall(pattern, page)
+                    page_links = []
 
-                    for link in page_links:
+                    for link in re.findall(pattern, page):
                         is_url = self._is_url(link)
                         link = self._normalize(link)
                         if is_url:
                             if self._is_internal(link):
-                                self._add_url(link, links)
+                                self._add_url(link, page_links)
                             elif self._is_relative(link):
                                 link = urljoin(url, link)
-                                self._add_url(link, links)
+                                self._add_url(link, page_links)
 
-            links = [link for link in links if link not in self._found_links]
-            chunks = self._chunks(links, self._max_requests)
+                    if source is not None:
+                        self._add_all_graph(source, links)
 
-            for chunk in chunks:
-                self._crawl(chunk)
+                    links = [link for link in links if link not in self._found_links]
+                    chunks = self._chunks(links, self._max_requests)
+
+                    for chunk in chunks:
+                        self._crawl(url, chunk)
 
     def _chunks(self, l, n):
         for i in range(0, len(l), n):
@@ -123,7 +129,7 @@ class Crawler:
             async with session.get(url) as response:
                 try:
                     response.raise_for_status()
-                    return url, await response.read()
+                    return url, response.url, await response.read()
                 except (ClientResponseError, ClientError, ClientConnectionError, ClientOSError,
                         ServerConnectionError) as e:
                     if not self._no_verbose:
@@ -151,6 +157,14 @@ class Crawler:
 
             if not_in_list and not excluded:
                 url_list.append(url)
+
+    def _add_graph(self, source, url):
+        self._add_all_graph(source, [url])
+
+    def _add_all_graph(self, source, urls):
+        if source not in self._graph:
+            self._graph[source] = set()
+        self._graph[source].update(urls)
 
     def _normalize(self, url):
         scheme, netloc, path, qs, anchor = urlsplit(url)

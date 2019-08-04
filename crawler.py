@@ -32,6 +32,7 @@ class Crawler:
             self._request_headers = request_header
         if request_header is not None and not request_header:
             self._request_headers = None
+        self._graph = {}
 
     def start(self):
         if not self._url:
@@ -50,6 +51,9 @@ class Crawler:
         sitemap += '\n</urlset>'
         return sitemap
 
+    def generate_graph(self):
+        return self._graph
+
     def _crawl(self, url):
         if not self._no_verbose:
             print(len(self._found_links), 'Parsing: ' + url)
@@ -57,9 +61,11 @@ class Crawler:
         response = self._request(url)
         if response:
             # Handle redirects
-            if url != response.geturl():
+            parsed_url = response.geturl()
+            if url != parsed_url:
                 self._add_url(url, self._found_links)
-                url = response.geturl()
+                self._add_graph(url, parsed_url)
+                url = parsed_url
                 if not self._same_domain(url) or url in self._found_links:
                     return
 
@@ -90,6 +96,8 @@ class Crawler:
                         link = urljoin(url, link)
                         self._add_url(link, links)
 
+            self._add_all_graph(url, links)
+
             for link in links:
                 if link not in self._found_links:
                     self._crawl(link)
@@ -114,7 +122,7 @@ class Crawler:
         url = self._normalize(url)
         if url:
             not_in_list = url not in url_list
-            
+
             excluded = False
             if self._exclude:
                 for pattern in self._exclude:
@@ -122,6 +130,14 @@ class Crawler:
 
             if not_in_list and not excluded:
                 url_list.append(url)
+
+    def _add_graph(self, source, url):
+        self._add_all_graph(source, [url])
+
+    def _add_all_graph(self, source, urls):
+        if source not in self._graph:
+            self._graph[source] = set()
+        self._graph[source].update(urls)
 
     def _normalize(self, url):
         scheme, netloc, path, qs, anchor = urlsplit(url)
