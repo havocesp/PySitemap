@@ -4,6 +4,7 @@ from urllib.error import URLError, HTTPError
 import re
 # from datetime import datetime
 import tldextract
+import ssl
 
 
 # https://github.com/Guiorgy/PySitemap
@@ -20,7 +21,14 @@ class Crawler:
         'Connection': 'keep-alive'
     }
 
-    def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None, build_graph=False):
+    def _get_context(self):
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        return context
+
+    def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None, build_graph=False,
+                 verify_ssl=False):
 
         self._url = self._normalize(url)
         self._host = urlparse(self._url).netloc
@@ -30,14 +38,13 @@ class Crawler:
         self._found_links = []
         self._error_links = []
         # self._redirect_links = []
-        if request_header:
+        if request_header or request_header == {}:
             self._request_headers = request_header
-        if request_header is not None and not request_header:
-            self._request_headers = None
         if build_graph:
             self._graph = {'HEAD': set(url)}
         else:
             self._graph = None
+        self._context = None if verify_ssl else self._get_context()
 
     def start(self):
         if not self._url:
@@ -116,11 +123,8 @@ class Crawler:
 
     def _request(self, url):
         try:
-            if self._request_headers:
-                request = urllib.request.Request(url, headers=self._request_headers)
-            else:
-                request = urllib.request.Request(url)
-            return urllib.request.urlopen(request)
+            request = urllib.request.Request(url, headers=self._request_headers)
+            return urllib.request.urlopen(request, context=self._context)
         except HTTPError as e:
             if not self._no_verbose:
                 print('HTTP Error code: ', e.code, ' ', url)
