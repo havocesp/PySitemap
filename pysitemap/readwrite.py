@@ -3,6 +3,8 @@ import networkx
 from networkx.readwrite import json_graph
 from networkx.readwrite import gexf
 import ujson
+import os
+import sys
 
 
 # def visualize(dict_graph, save_path=None):
@@ -42,6 +44,16 @@ import ujson
 #     # del fig
 
 
+_module_root_dir = None
+
+
+def _get_module_root_dir():
+    global _module_root_dir
+    if not _module_root_dir:
+        _module_root_dir = os.path.dirname(sys.modules['__main__'].__file__)
+    return _module_root_dir
+
+
 def convert_graph(dict_graph):
     # Build networkx Directional Graph
     graph = networkx.DiGraph()
@@ -54,7 +66,7 @@ def convert_graph(dict_graph):
 # Save graph
 # Convert the graph to json ready format using networkx.readwrite.json_graph
 # Serialize the result using ujson
-def save_graph(graph, save_path):
+def save_graph(graph, save_path=_get_module_root_dir()):
     if not save_path or not graph:
         return None
     if not save_path.endswith('/'):
@@ -63,7 +75,7 @@ def save_graph(graph, save_path):
         file.write(ujson.dumps(json_graph.node_link_data(graph)))
 
 
-def load_graph(load_path):
+def load_graph(load_path=_get_module_root_dir()):
     if not load_path:
         return None
     if not load_path.endswith('/'):
@@ -74,7 +86,7 @@ def load_graph(load_path):
 
 
 # Save a gexf file for opening it in Gephi or similar tools
-def extract_graph(graph, save_path):
+def extract_graph(graph, save_path=_get_module_root_dir()):
     if not save_path or not graph:
         return None
     if not save_path.endswith('/'):
