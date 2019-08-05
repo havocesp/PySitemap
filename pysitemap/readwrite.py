@@ -66,29 +66,48 @@ def convert_graph(dict_graph):
 # Save graph
 # Convert the graph to json ready format using networkx.readwrite.json_graph
 # Serialize the result using ujson
-def save_graph(graph, save_path=_get_module_root_dir()):
+def save_graph(graph, save_path=_get_module_root_dir(), no_verbose=False):
     if not save_path or not graph:
-        return None
+        if not no_verbose:
+            print('Failed to save graph:\nsave_path =', save_path, '\ngraph =', graph)
+        return
     if not save_path.endswith('/'):
         save_path += '/'
     with open(save_path + 'graph.json', 'w') as file:
-        file.write(ujson.dumps(json_graph.node_link_data(graph)))
+        try:
+            file.write(ujson.dumps(json_graph.node_link_data(graph)))
+        except IOError as e:
+            if not no_verbose:
+                print('Failed to save graph: ', e.reason)
 
 
-def load_graph(load_path=_get_module_root_dir()):
+def load_graph(load_path=_get_module_root_dir(), no_verbose=False):
     if not load_path:
+        if not no_verbose:
+            print('Failed to save graph:\nsave_path =', load_path)
         return None
     if not load_path.endswith('/'):
         load_path += '/'
     with open(load_path + 'graph.json') as file:
-        json = ujson.load(file)
-    return json_graph.node_link_graph(json)
+        try:
+            json = ujson.load(file)
+            return json_graph.node_link_graph(json)
+        except IOError as e:
+            if not no_verbose:
+                print('Failed to save graph: ', e.reason)
+    return None
 
 
 # Save a gexf file for opening it in Gephi or similar tools
-def extract_graph(graph, save_path=_get_module_root_dir()):
+def extract_graph(graph, save_path=_get_module_root_dir(), no_verbose=False):
     if not save_path or not graph:
-        return None
+        if not no_verbose:
+            print('Failed to save graph:\nsave_path =', save_path, '\ngraph =', graph)
+        return
     if not save_path.endswith('/'):
         save_path += '/'
-    gexf.write_gexf(graph, save_path + 'graph.gexf')
+    try:
+        gexf.write_gexf(graph, save_path + 'graph.gexf')
+    except IOError as e:
+        if not no_verbose:
+            print('Failed to save graph: ', e.reason)
