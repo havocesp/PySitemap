@@ -45,6 +45,9 @@ class Crawler:
         self._crawl(self._url)
         return self._found_links
 
+    def close(self):
+        del self._found_links, self._error_links, self._graph
+
     def generate_sitemap(self):
         sitemap = '''<?xml version="1.0" encoding="UTF-8"?>
         <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
