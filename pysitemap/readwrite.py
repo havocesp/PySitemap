@@ -63,7 +63,6 @@ def save_graph(graph, save_path):
         file.write(ujson.dumps(json_graph.node_link_data(graph)))
 
 
-# Save a gexf file for opening it in Gephi or similar tools
 def load_graph(load_path):
     if not load_path:
         return None
@@ -74,6 +73,7 @@ def load_graph(load_path):
     return json_graph.node_link_graph(json)
 
 
+# Save a gexf file for opening it in Gephi or similar tools
 def extract_graph(graph, save_path):
     if not save_path or not graph:
         return None
