@@ -59,9 +59,9 @@ python main.py --url="https://www.finstead.com" --max-requests=100
 ## Usage
 
 ```python
-from async_crawler import Crawler
+from PySitemap.async_crawler import Crawler
 # or 
-# from crawler import Crawler
+# from PySitemap.crawler import Crawler
 
 crawler = Crawler(url, exclude=exclude, domain=domain, no_verbose=True,
                   timeout=300, retry_times=1, max_requests=100, build_graph=True)
@@ -70,10 +70,10 @@ with open('sitemap.xml', 'w') as file:
     file.write(crawler.generate_sitemap())
 
 # You can also generate a graph (in json and gexf formats)
-from visualize import visualize
+from PySitemap import readwrite
 graph = crawler.generate_graph()
-# This will generate graph.json and graph.gexf files in the given directory
-visualize(graph, dir_path)
+# This will generate graph.gexf files in the given directory
+readwrite.extract_graph(readwrite.convert_graph(graph), dir_path)
 ```
 
 ## Notice
