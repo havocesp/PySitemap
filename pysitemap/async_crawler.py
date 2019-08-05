@@ -139,17 +139,17 @@ class Crawler:
     def _request(self, urls):
         async def __fetch(session, url):
             for tries_left in reversed(range(0, self._retry_times)):
-                async with session.get(url) as response:
-                    try:
+                try:
+                    async with session.get(url) as response:
                         response.raise_for_status()
                         return url, response.url.human_repr(), await response.read()
-                    except (ClientResponseError, ClientError, ClientConnectionError, ClientOSError,
-                            ServerConnectionError) as e:
-                        if not self._no_verbose:
-                            print('HTTP Error code=', e, ' ', url)
-                        if tries_left == 0:
-                            self._add_url(url, self._error_links)
-                            return url, None, None
+                except (ClientResponseError, ClientError, ClientConnectionError, ClientOSError,
+                        ServerConnectionError) as e:
+                    if not self._no_verbose:
+                        print('HTTP Error code=', e, ' ', url)
+                    if tries_left == 0:
+                        self._add_url(url, self._error_links)
+                        return url, None, None
 
         async def __fetch_all():
             if self._timeout:
