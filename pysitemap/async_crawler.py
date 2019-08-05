@@ -144,7 +144,7 @@ class Crawler:
                         response.raise_for_status()
                         return url, response.url.human_repr(), await response.read()
                 except (ClientResponseError, ClientError, ClientConnectionError, ClientOSError,
-                        ServerConnectionError) as e:
+                        ServerConnectionError, AssertionError) as e:
                     if not self._no_verbose:
                         print('HTTP Error code=', e, ' ', url)
                     if tries_left == 0:
