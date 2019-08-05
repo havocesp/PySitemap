@@ -118,7 +118,7 @@ class Crawler:
             self._add_all_graph(url, links)
 
             for link in links:
-                if link not in self._found_links:
+                if link not in self._found_links and link not in self._error_links:
                     self._crawl(link)
 
     def _request(self, url):

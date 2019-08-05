@@ -123,7 +123,10 @@ class Crawler:
 
                     self._add_all_graph(url, links)
 
-                    links = [link for link in links if link not in self._found_links and link not in urls]
+                    links = [link for link in links
+                             if link not in self._found_links
+                             and link not in urls
+                             and link not in self._error_links]
 
                     tasks += links
 
