@@ -1,6 +1,6 @@
 import argparse
-from PySitemap.crawler import Crawler
-from PySitemap.async_crawler import Crawler as AsyncCrawler
+from pysitemap.crawler import Crawler
+from pysitemap.async_crawler import Crawler as AsyncCrawler
 import ssl
 
 # monkey patch ssl
