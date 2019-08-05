@@ -1,5 +1,6 @@
 from urllib.parse import urlsplit, urlunsplit, urljoin, urlparse
 import aiohttp
+from aiohttp import TCPConnector, ClientSession
 from aiohttp import ClientResponseError, ClientError, ClientConnectionError, ClientOSError, ServerConnectionError
 from aiohttp.client import ClientTimeout
 import asyncio
@@ -23,8 +24,8 @@ class Crawler:
         'Connection': 'keep-alive'
     }
 
-    def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None,
-                 timeout=DEFAULT_TIMEOUT, retry_times=1, max_requests=100, build_graph=False):
+    def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None, timeout=DEFAULT_TIMEOUT,
+                 retry_times=1, max_requests=100, build_graph=False, verify_ssl=False):
 
         self._url = self._normalize(url)
         self._host = urlparse(self._url).netloc
@@ -45,6 +46,7 @@ class Crawler:
             self._graph = {'HEAD': set(url)}
         else:
             self._graph = None
+        self._verify_ssl = verify_ssl if verify_ssl is not None else False
 
     def start(self):
         if not self._url:
@@ -151,7 +153,9 @@ class Crawler:
 
         async def __fetch_all():
             if self._timeout:
-                async with aiohttp.ClientSession(timeout=self._timeout, headers=self._request_headers) as session:
+                async with ClientSession(timeout=self._timeout,
+                                         headers=self._request_headers,
+                                         connector=TCPConnector(verify_ssl=self._verify_ssl)) as session:
                     return await asyncio.gather(*[asyncio.create_task(__fetch(session, url)) for url in urls])
 
         task = asyncio.get_event_loop()

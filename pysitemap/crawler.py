@@ -128,6 +128,9 @@ class Crawler:
         except URLError as e:
             if not self._no_verbose:
                 print('Error: Failed to reach server. ', e.reason)
+        except ValueError as e:
+            if not self._no_verbose:
+                print('Error: Failed read url. ', e)
         return None
 
     def _add_url(self, url, url_list):
