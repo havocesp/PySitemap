@@ -73,7 +73,7 @@ with open('sitemap.xml', 'w') as file:
 from pysitemap import readwrite
 graph = crawler.generate_graph()
 # This will generate graph.gexf files in the given directory
-readwrite.extract_graph(readwrite.convert_graph(graph), dir_path)
+readwrite.export_graph(readwrite.convert_graph(graph), dir_path)
 ```
 
 ## Notice

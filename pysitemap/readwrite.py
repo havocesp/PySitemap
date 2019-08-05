@@ -99,7 +99,7 @@ def load_graph(load_path=_get_module_root_dir(), no_verbose=False):
 
 
 # Save a gexf file for opening it in Gephi or similar tools
-def extract_graph(graph, save_path=_get_module_root_dir(), no_verbose=False):
+def export_graph(graph, save_path=_get_module_root_dir(), no_verbose=False):
     if not save_path or not graph:
         if not no_verbose:
             print('Failed to save graph:\nsave_path =', save_path, '\ngraph =', graph)
