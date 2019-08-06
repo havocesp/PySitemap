@@ -35,25 +35,21 @@ class Crawler:
         self._domain = domain if domain is not None else self._get_domain(self._url)
         self._exclude = exclude.split() if exclude else None
         self._no_verbose = no_verbose
-        self._found_links = []
         self._error_links = []
-        # self._redirect_links = []
         if request_header or request_header == {}:
             self._request_headers = request_header
-        if build_graph:
-            self._graph = {'HEAD': set(url)}
-        else:
-            self._graph = None
+        self._build_graph = build_graph
+        self._graph = {}
         self._context = None if verify_ssl else self._get_context()
 
     def start(self):
         if not self._url:
             return None
         self._crawl(self._url)
-        return self._found_links
+        return self._graph.keys()
 
     def close(self):
-        del self._found_links, self._error_links, self._graph
+        del self._error_links, self._graph
 
     def generate_sitemap(self):
         sitemap = '''<?xml version="1.0" encoding="UTF-8"?>
@@ -61,31 +57,28 @@ class Crawler:
             xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
             http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
             xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'''
-        for url in self._found_links:
+        for url in self._graph.keys():
             sitemap += "\n\t<url>\n\t\t<loc>{0}</loc>\n\t</url>".format(url)
         sitemap += '\n</urlset>'
         return sitemap
 
     def generate_graph(self):
-        try:
-            self._graph.pop('HEAD')
-        except (KeyError, AttributeError):
-            pass
+        if not self._build_graph:
+            return None
         return self._graph
 
     def _crawl(self, url):
         if not self._no_verbose:
-            print(len(self._found_links), 'Parsing: ' + url)
+            print(len(self._graph.keys()), 'Parsing: ' + url)
 
         response = self._request(url)
         if response:
             # Handle redirects
             parsed_url = response.geturl()
             if url != parsed_url:
-                self._add_url(url, self._found_links)
                 self._add_graph(url, parsed_url)
                 url = parsed_url
-                if not self._same_domain(url) or url in self._found_links:
+                if not self._same_domain(url) or url in self._graph:
                     return
 
             # TODO Handle last modified
@@ -97,7 +90,7 @@ class Crawler:
 
             # TODO Handle priority
 
-            self._add_url(url, self._found_links)
+            self._add_graph(url, None)
 
             page = str(response.read())
             pattern = '<a [^>]*href=[\'|"](.*?)[\'"].*?>'
@@ -115,10 +108,11 @@ class Crawler:
                         link = urljoin(url, link)
                         self._add_url(link, links)
 
-            self._add_all_graph(url, links)
+            if self._build_graph:
+                self._add_all_graph(url, links)
 
             for link in links:
-                if link not in self._found_links and link not in self._error_links:
+                if link not in self._graph and link not in self._error_links:
                     self._crawl(link)
 
     def _request(self, url):
@@ -151,13 +145,15 @@ class Crawler:
                 url_list.append(url)
 
     def _add_graph(self, source, url):
-        self._add_all_graph(source, [url])
+        if source not in self._graph:
+            self._graph[source] = set() if self._build_graph else None
+        if not self._build_graph or url is None:
+            return
+        self._graph[source].add(url)
 
     def _add_all_graph(self, source, urls):
-        if not self._graph:
-            return
         if source not in self._graph:
-            self._graph[source] = set()
+            self._graph[source] = set() if self._build_graph else None
         self._graph[source].update(urls)
 
     def _normalize(self, url):

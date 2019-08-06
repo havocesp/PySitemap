@@ -32,9 +32,7 @@ class Crawler:
         self._domain = domain if domain is not None else self._get_domain(self._url)
         self._exclude = exclude.split() if exclude else None
         self._no_verbose = no_verbose
-        self._found_links = []
         self._error_links = []
-        # self._redirect_links = []
         if request_header:
             self._request_headers = request_header
         if request_header is not None and not request_header:
@@ -42,10 +40,8 @@ class Crawler:
         self._timeout = timeout if timeout else self.DEFAULT_TIMEOUT
         self._retry_times = retry_times if retry_times > 0 else 1
         self._max_requests = max_requests if max_requests else 100
-        if build_graph:
-            self._graph = {'HEAD': set(url)}
-        else:
-            self._graph = None
+        self._build_graph = build_graph
+        self._graph = {}
         self._verify_ssl = verify_ssl if verify_ssl is not None else False
 
     def start(self):
@@ -54,10 +50,10 @@ class Crawler:
         self._crawl([self._url])
         if not self._no_verbose:
             print('Failed to parse: ', self._error_links)
-        return self._found_links
+        return self._graph.keys()
 
     def close(self):
-        del self._found_links, self._error_links, self._graph
+        del self._error_links, self._graph
 
     def generate_sitemap(self):
         sitemap = '''<?xml version="1.0" encoding="UTF-8"?>
@@ -65,31 +61,28 @@ class Crawler:
             xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
             http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
             xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'''
-        for url in self._found_links:
+        for url in self._graph.keys():
             sitemap += "\n\t<url>\n\t\t<loc>{0}</loc>\n\t</url>".format(url)
         sitemap += '\n</urlset>'
         return sitemap
 
     def generate_graph(self):
-        try:
-            self._graph.pop('HEAD')
-        except (KeyError, AttributeError):
-            pass
+        if not self._build_graph:
+            return None
         return self._graph
 
     def _crawl(self, urls):
         tasks = []
         if not self._no_verbose:
-            print(len(self._found_links), 'Parsing: ', urls)
+            print(len(self._graph.keys()), 'Parsing: ', urls)
         responses = self._request(urls)
         if responses:
             for (requested_url, url, html) in responses:
                 if url:
                     # Handle redirects
                     if requested_url != url:
-                        self._add_url(requested_url, self._found_links)
                         self._add_graph(requested_url, url)
-                        if not self._same_domain(url):
+                        if not self._same_domain(url) or url in self._graph:
                             continue
 
                     # TODO Handle last modified
@@ -101,7 +94,7 @@ class Crawler:
 
                     # TODO Handle priority
 
-                    self._add_url(url, self._found_links)
+                    self._add_graph(url, None)
 
                     if not html:
                         continue
@@ -121,12 +114,14 @@ class Crawler:
                                 link = urljoin(url, link)
                                 self._add_url(link, links)
 
-                    self._add_all_graph(url, links)
+                    if self._build_graph:
+                        self._add_all_graph(url, links)
 
                     links = [link for link in links
-                             if link not in self._found_links
+                             if link not in self._graph
                              and link not in urls
-                             and link not in self._error_links]
+                             and link not in self._error_links
+                             and link not in tasks]
 
                     tasks += links
 
@@ -147,12 +142,15 @@ class Crawler:
                         response.raise_for_status()
                         return url, response.url.human_repr(), await response.read()
                 except (ClientResponseError, ClientError, ClientConnectionError, ClientOSError,
-                        ServerConnectionError, AssertionError) as e:
+                        ServerConnectionError) as e:
                     if not self._no_verbose:
                         print('HTTP Error code=', e, ' ', url)
-                    if tries_left == 0:
-                        self._add_url(url, self._error_links)
-                        return url, None, None
+                except (AssertionError, Exception) as e:
+                    if not self._no_verbose:
+                        print('Error raised while requesting "url": ', e)
+                if tries_left == 0:
+                    self._add_url(url, self._error_links)
+                    return url, None, None
 
         async def __fetch_all():
             if self._timeout:
@@ -161,8 +159,8 @@ class Crawler:
                                          connector=TCPConnector(verify_ssl=self._verify_ssl)) as session:
                     return await asyncio.gather(*[asyncio.create_task(__fetch(session, url)) for url in urls])
 
-        task = asyncio.get_event_loop()
-        return task.run_until_complete(__fetch_all())
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(__fetch_all())
 
     def _add_url(self, url, url_list):
         url = self._normalize(url)
@@ -178,13 +176,15 @@ class Crawler:
                 url_list.append(url)
 
     def _add_graph(self, source, url):
-        self._add_all_graph(source, [url])
+        if source not in self._graph:
+            self._graph[source] = set() if self._build_graph else None
+        if not self._build_graph or url is None:
+            return
+        self._graph[source].add(url)
 
     def _add_all_graph(self, source, urls):
-        if not self._graph:
-            return
         if source not in self._graph:
-            self._graph[source] = set()
+            self._graph[source] = set() if self._build_graph else None
         self._graph[source].update(urls)
 
     def _normalize(self, url):
