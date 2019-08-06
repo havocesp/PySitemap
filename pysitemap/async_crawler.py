@@ -87,12 +87,12 @@ class Crawler:
 
             responses = self._request(urls)
             if responses:
-                for (requested_url, root_url, html) in responses:
-                    if root_url:
+                for (requested_url, url, html) in responses:
+                    if url:
                         # Handle redirects
-                        if requested_url != root_url:
-                            self._add_graph(requested_url, root_url)
-                            if not self._same_domain(root_url) or root_url in self._graph:
+                        if requested_url != url:
+                            self._add_graph(requested_url, url)
+                            if not self._same_domain(url) or url in self._graph:
                                 continue
 
                         # TODO Handle last modified
@@ -104,7 +104,7 @@ class Crawler:
 
                         # TODO Handle priority
 
-                        self._add_graph(root_url, None)
+                        self._add_graph(url, None)
 
                         if not html:
                             continue
@@ -121,11 +121,11 @@ class Crawler:
                                 if self._is_internal(link):
                                     self._add_url(link, links)
                                 elif self._is_relative(link):
-                                    link = urljoin(root_url, link)
+                                    link = urljoin(url, link)
                                     self._add_url(link, links)
 
                         if self._build_graph:
-                            self._add_all_graph(root_url, links)
+                            self._add_all_graph(url, links)
 
                         links = [link for link in links
                                  if link not in self._graph
