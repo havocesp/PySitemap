@@ -21,7 +21,7 @@ class Crawler:
         'Connection': 'keep-alive'
     }
 
-    def _get_context(self):
+    def _get_default_context(self):
         context = ssl.create_default_context()
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
@@ -42,7 +42,7 @@ class Crawler:
             self._request_header = None
         self._build_graph = build_graph
         self._graph = {}
-        self._context = None if verify_ssl else self._get_context()
+        self._context = None if verify_ssl else self._get_default_context()
 
     def start(self):
         if not self._url:
@@ -69,53 +69,56 @@ class Crawler:
             return None
         return self._graph
 
-    def _crawl(self, url):
-        if not self._no_verbose:
-            print(len(self._graph.keys()), 'Parsing: ' + url)
+    def _crawl(self, root_url):
+        urls = {root_url}
 
-        response = self._request(url)
-        if response:
-            # Handle redirects
-            parsed_url = response.geturl()
-            if url != parsed_url:
-                self._add_graph(url, parsed_url)
-                url = parsed_url
-                if not self._same_domain(url) or url in self._graph:
-                    return
+        while urls:
+            url = urls.pop()
 
-            # TODO Handle last modified
-            # last_modified = response.info()['Last-Modified']
-            # Fri, 19 Oct 2018 18:49:51 GMT
-            # if last_modified:
-            #     dateTimeObject = datetime.strptime(last_modified, '%a, %d %b %Y %H:%M:%S %Z')
-            #     print('Last Modified:', dateTimeObject)
+            if not self._no_verbose:
+                print(len(self._graph.keys()), 'Parsing: ' + url)
 
-            # TODO Handle priority
+            response = self._request(url)
+            if response:
+                # Handle redirects
+                parsed_url = response.geturl()
+                if url != parsed_url:
+                    self._add_graph(url, parsed_url)
+                    url = parsed_url
+                    if not self._same_domain(url) or url in self._graph:
+                        return
 
-            self._add_graph(url, None)
+                # TODO Handle last modified
+                # last_modified = response.info()['Last-Modified']
+                # Fri, 19 Oct 2018 18:49:51 GMT
+                # if last_modified:
+                #     dateTimeObject = datetime.strptime(last_modified, '%a, %d %b %Y %H:%M:%S %Z')
+                #     print('Last Modified:', dateTimeObject)
 
-            page = str(response.read())
-            pattern = '<a [^>]*href=[\'|"](.*?)[\'"].*?>'
+                # TODO Handle priority
 
-            page_links = re.findall(pattern, page)
-            links = []
+                self._add_graph(url, None)
 
-            for link in page_links:
-                is_url = self._is_url(link)
-                link = self._normalize(link)
-                if is_url:
-                    if self._is_internal(link):
-                        self._add_url(link, links)
-                    elif self._is_relative(link):
-                        link = urljoin(url, link)
-                        self._add_url(link, links)
+                page = str(response.read())
+                pattern = '<a [^>]*href=[\'|"](.*?)[\'"].*?>'
 
-            if self._build_graph:
-                self._add_all_graph(url, links)
+                page_links = re.findall(pattern, page)
+                links = []
 
-            for link in links:
-                if link not in self._graph and link not in self._error_links:
-                    self._crawl(link)
+                for link in page_links:
+                    is_url = self._is_url(link)
+                    link = self._normalize(link)
+                    if is_url:
+                        if self._is_internal(link):
+                            self._add_url(link, links)
+                        elif self._is_relative(link):
+                            link = urljoin(url, link)
+                            self._add_url(link, links)
+
+                if self._build_graph:
+                    self._add_all_graph(url, links)
+
+                urls.update([link for link in links if link not in self._graph and link not in self._error_links])
 
     def _request(self, url):
         try:
