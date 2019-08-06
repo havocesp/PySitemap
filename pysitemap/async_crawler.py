@@ -35,7 +35,7 @@ class Crawler:
         self._error_links = []
         if request_header:
             self._request_headers = request_header
-        if request_header is not None and not request_header:
+        if request_header == {}:
             self._request_headers = None
         self._timeout = timeout if timeout else self.DEFAULT_TIMEOUT
         self._retry_times = retry_times if retry_times > 0 else 1

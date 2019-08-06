@@ -36,8 +36,10 @@ class Crawler:
         self._exclude = exclude.split() if exclude else None
         self._no_verbose = no_verbose
         self._error_links = []
-        if request_header or request_header == {}:
+        if request_header:
             self._request_headers = request_header
+        if request_header == {}:
+            self._request_header = None
         self._build_graph = build_graph
         self._graph = {}
         self._context = None if verify_ssl else self._get_context()
