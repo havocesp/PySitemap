@@ -227,3 +227,7 @@ class Crawler:
         if domain and suffix:
             return domain + '.' + suffix
         return None
+
+# TODO: Handle url compositions
+    # for example: 'https://www.bbc.co.uk/sport/olympics/rio-2016/schedule/sports/diving/ /sport/olympics/rio-2016/schedule/sports/modern-pentathlon'
+    # or: '/sport/olympics/rio-2016/schedule/sports/diving/ /sport/olympics/rio-2016/schedule/sports/modern-pentathlon'
