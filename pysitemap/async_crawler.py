@@ -11,6 +11,7 @@ from aiohttp.client import ClientTimeout
 # https://github.com/Guiorgy/PySitemap
 # Fork of
 # https://github.com/Cartman720/PySitemap
+from aiohttp.client_exceptions import TooManyRedirects
 
 
 class Crawler:
@@ -145,6 +146,9 @@ class Crawler:
                     async with session.get(url) as response:
                         response.raise_for_status()
                         return url, response.url.human_repr(), await response.read()
+                except TooManyRedirects:
+                    if not self._no_verbose:
+                        print("Couldn't get", url, 'there were too many redirection. Error=', e)
                 except (ClientResponseError, ClientError, ClientConnectionError, ClientOSError,
                         ServerConnectionError) as e:
                     if not self._no_verbose:
@@ -233,3 +237,4 @@ class Crawler:
     # or: '/sport/olympics/rio-2016/schedule/sports/diving/ /sport/olympics/rio-2016/schedule/sports/modern-pentathlon'
 # TODO: Limit number of redirections.
 # TODO: Limit the depth of the request querry. (ex. number of '/' or length of request string)
+# TODO: Implement a stop function to stop crawling with current data
