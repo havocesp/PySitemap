@@ -38,7 +38,7 @@ class Crawler:
             self._request_headers = None
         self._timeout = timeout if timeout else self.DEFAULT_TIMEOUT
         self._retry_times = retry_times if retry_times > 0 else 1
-        self._max_requests = max_requests if max_requests else 100
+        self._max_requests = max_requests and max_requests > 0 if max_requests else 100
         self._build_graph = build_graph
         self._graph = {}
         self._verify_ssl = verify_ssl if verify_ssl is not None else False
@@ -46,7 +46,7 @@ class Crawler:
     def start(self):
         if not self._url:
             return None
-        self._crawl([self._url])
+        self._crawl(self._url)
         if not self._no_verbose:
             print('Failed to parse: ', self._error_links)
         return self._graph.keys()
@@ -70,68 +70,73 @@ class Crawler:
             return None
         return self._graph
 
-    def _crawl(self, urls):
-        tasks = []
-        if not self._no_verbose:
-            print(len(self._graph.keys()), 'Parsing: ', urls)
-        responses = self._request(urls)
-        if responses:
-            for (requested_url, url, html) in responses:
-                if url:
-                    # Handle redirects
-                    if requested_url != url:
-                        self._add_graph(requested_url, url)
-                        if not self._same_domain(url) or url in self._graph:
+    def _crawl(self, root_url):
+        urls_to_request = {root_url}
+
+        while urls_to_request:
+            urls = []
+            try:
+                for i in range(0, self._max_requests):
+                    urls.append(urls_to_request.pop())
+            except KeyError:
+                # There were less than self._max_requests urls in urls_to_request set
+                pass
+
+            if not self._no_verbose:
+                print('Found:', len(self._graph.keys()), 'Parsing:', urls)
+
+            responses = self._request(urls)
+            if responses:
+                for (requested_url, root_url, html) in responses:
+                    if root_url:
+                        # Handle redirects
+                        if requested_url != root_url:
+                            self._add_graph(requested_url, root_url)
+                            if not self._same_domain(root_url) or root_url in self._graph:
+                                continue
+
+                        # TODO Handle last modified
+                        # last_modified = response.info()['Last-Modified']
+                        # Fri, 19 Oct 2018 18:49:51 GMT
+                        # if last_modified:
+                        #     dateTimeObject = datetime.strptime(last_modified, '%a, %d %b %Y %H:%M:%S %Z')
+                        #     print('Last Modified:', dateTimeObject)
+
+                        # TODO Handle priority
+
+                        self._add_graph(root_url, None)
+
+                        if not html:
                             continue
 
-                    # TODO Handle last modified
-                    # last_modified = response.info()['Last-Modified']
-                    # Fri, 19 Oct 2018 18:49:51 GMT
-                    # if last_modified:
-                    #     dateTimeObject = datetime.strptime(last_modified, '%a, %d %b %Y %H:%M:%S %Z')
-                    #     print('Last Modified:', dateTimeObject)
+                        page = str(html)
+                        pattern = '<a [^>]*href=[\'|"](.*?)[\'"].*?>'
 
-                    # TODO Handle priority
+                        links = []
 
-                    self._add_graph(url, None)
+                        for link in re.findall(pattern, page):
+                            is_url = self._is_url(link)
+                            link = self._normalize(link)
+                            if is_url:
+                                if self._is_internal(link):
+                                    self._add_url(link, links)
+                                elif self._is_relative(link):
+                                    link = urljoin(root_url, link)
+                                    self._add_url(link, links)
 
-                    if not html:
-                        continue
+                        if self._build_graph:
+                            self._add_all_graph(root_url, links)
 
-                    page = str(html)
-                    pattern = '<a [^>]*href=[\'|"](.*?)[\'"].*?>'
+                        links = [link for link in links
+                                 if link not in self._graph
+                                 and link not in self._error_links
+                                 and link not in urls]
 
-                    links = []
+                        urls_to_request.update(links)
 
-                    for link in re.findall(pattern, page):
-                        is_url = self._is_url(link)
-                        link = self._normalize(link)
-                        if is_url:
-                            if self._is_internal(link):
-                                self._add_url(link, links)
-                            elif self._is_relative(link):
-                                link = urljoin(url, link)
-                                self._add_url(link, links)
-
-                    if self._build_graph:
-                        self._add_all_graph(url, links)
-
-                    links = [link for link in links
-                             if link not in self._graph
-                             and link not in urls
-                             and link not in self._error_links
-                             and link not in tasks]
-
-                    tasks += links
-
-        if tasks:
-            chunks = self._chunks(tasks, self._max_requests)
-            for chunk in chunks:
-                self._crawl(chunk)
-
-    def _chunks(self, l, n):
-        for i in range(0, len(l), n):
-            yield l[i:i + n]
+    # def _chunks(self, l, n):
+    #     for i in range(0, len(l), n):
+    #         yield l[i:i + n]
 
     def _request(self, urls):
         async def __fetch(session, url):
