@@ -38,7 +38,7 @@ class Crawler:
             self._request_headers = None
         self._timeout = timeout if timeout else self.DEFAULT_TIMEOUT
         self._retry_times = retry_times if retry_times > 0 else 1
-        self._max_requests = max_requests and max_requests > 0 if max_requests else 100
+        self._max_requests = max_requests if max_requests and max_requests > 0 else 100
         self._build_graph = build_graph
         self._graph = {}
         self._verify_ssl = verify_ssl if verify_ssl is not None else False
