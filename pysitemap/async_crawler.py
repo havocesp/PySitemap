@@ -1,6 +1,6 @@
 import asyncio
 import re
-from urllib.parse import urlsplit, urlunsplit, urljoin, urlparse
+from urllib.parse import urlsplit, urlunsplit, urljoin
 # from datetime import datetime
 import tldextract
 from aiohttp import ClientResponseError, ClientError, ClientConnectionError, ClientOSError, ServerConnectionError
@@ -28,7 +28,7 @@ class Crawler:
                  retry_times=1, max_requests=100, build_graph=False, verify_ssl=False, max_redirects=10):
 
         self._url = self._normalize(url)
-        self._host = urlparse(self._url).netloc
+        self._host = urlsplit(self._url).netloc
         self._domain = domain if domain is not None else self._get_domain(self._url)
         self._exclude = exclude.split() if exclude else None
         self._no_verbose = no_verbose
@@ -116,15 +116,16 @@ class Crawler:
 
                         links = []
 
-                        for link in re.findall(pattern, page):
-                            is_url = self._is_url(link)
-                            link = self._normalize(link)
-                            if is_url:
-                                if self._is_internal(link):
-                                    self._add_url(link, links)
-                                elif self._is_relative(link):
-                                    link = urljoin(url, link)
-                                    self._add_url(link, links)
+                        for match in re.findall(pattern, page):
+                            for link in match.split():
+                                is_url = self._is_url(link)
+                                link = self._normalize(link)
+                                if is_url:
+                                    if self._is_internal(link):
+                                        self._add_url(link, links)
+                                    elif self._is_relative(link):
+                                        link = urljoin(url, link)
+                                        self._add_url(link, links)
 
                         if self._build_graph:
                             self._add_all_graph(url, links)
@@ -203,20 +204,20 @@ class Crawler:
         return urlunsplit((scheme, netloc, path, qs, anchor))
 
     def _is_internal(self, url):
-        host = urlparse(url).netloc
+        host = urlsplit(url).netloc
         if self._domain:
             return self._domain in host
         return host == self._host
 
     def _is_relative(self, url):
-        host = urlparse(url).netloc
+        host = urlsplit(url).netloc
         return host == ''
 
     def _same_domain(self, url):
         domain = self._get_domain(url)
         if domain and domain == self._domain:
             return True
-        elif urlparse(url).netloc == self._host:
+        elif urlsplit(url).netloc == self._host:
             return True
         return False
 
@@ -233,8 +234,5 @@ class Crawler:
             return domain + '.' + suffix
         return None
 
-# TODO: Handle url compositions
-    # for example: 'https://www.bbc.co.uk/sport/olympics/rio-2016/schedule/sports/diving/ /sport/olympics/rio-2016/schedule/sports/modern-pentathlon'
-    # or: '/sport/olympics/rio-2016/schedule/sports/diving/ /sport/olympics/rio-2016/schedule/sports/modern-pentathlon'
 # TODO: Limit the depth of the request querry. (ex. number of '/' or length of request string)
 # TODO: Implement a stop function to stop crawling with current data
