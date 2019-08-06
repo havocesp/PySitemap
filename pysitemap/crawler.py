@@ -76,7 +76,7 @@ class Crawler:
             url = urls.pop()
 
             if not self._no_verbose:
-                print(len(self._graph.keys()), 'Parsing: ' + url)
+                print(len(self._graph.keys()), 'Done. Parsing:' + url)
 
             response = self._request(url)
             if response:
