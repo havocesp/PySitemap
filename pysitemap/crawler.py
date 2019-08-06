@@ -1,6 +1,7 @@
 import re
 import ssl
-import urllib.request
+from urllib import request
+from urllib.request import HTTPRedirectHandler
 from urllib.error import URLError, HTTPError
 from urllib.parse import urlsplit, urlunsplit, urljoin, urlparse
 # from datetime import datetime
@@ -27,8 +28,11 @@ class Crawler:
         context.verify_mode = ssl.CERT_NONE
         return context
 
+    class _HTTPRedirectHandler(HTTPRedirectHandler):
+        max_redirections = 10
+
     def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None, build_graph=False,
-                 verify_ssl=False):
+                 verify_ssl=False, max_redirects=10):
 
         self._url = self._normalize(url)
         self._host = urlparse(self._url).netloc
@@ -43,6 +47,11 @@ class Crawler:
         self._build_graph = build_graph
         self._graph = {}
         self._context = None if verify_ssl else self._get_default_context()
+        self._max_redirects = max_redirects if max_redirects and max_redirects >= 0 else 10
+
+        if self._max_redirects != 10:
+            self._HTTPRedirectHandler.max_redirections = self._max_redirects
+            request.build_opener(self._HTTPRedirectHandler)
 
     def start(self):
         if not self._url:
@@ -122,8 +131,8 @@ class Crawler:
 
     def _request(self, url):
         try:
-            request = urllib.request.Request(url, headers=self._request_headers)
-            return urllib.request.urlopen(request, context=self._context)
+            req = request.Request(url, headers=self._request_headers)
+            return request.urlopen(req, context=self._context)
         except HTTPError as e:
             if not self._no_verbose:
                 print('HTTP Error code: ', e.code, ' ', url)

@@ -25,7 +25,7 @@ class Crawler:
     }
 
     def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None, timeout=DEFAULT_TIMEOUT,
-                 retry_times=1, max_requests=100, build_graph=False, verify_ssl=False):
+                 retry_times=1, max_requests=100, build_graph=False, verify_ssl=False, max_redirects=10):
 
         self._url = self._normalize(url)
         self._host = urlparse(self._url).netloc
@@ -43,6 +43,7 @@ class Crawler:
         self._build_graph = build_graph
         self._graph = {}
         self._verify_ssl = verify_ssl if verify_ssl is not None else False
+        self._max_redirects = max_redirects if max_redirects and max_redirects >= 0 else 10
 
     def start(self):
         if not self._url:
@@ -143,7 +144,7 @@ class Crawler:
         async def __fetch(session, url):
             for tries_left in reversed(range(0, self._retry_times)):
                 try:
-                    async with session.get(url) as response:
+                    async with session.get(url, max_redirects=0) as response:
                         response.raise_for_status()
                         return url, response.url.human_repr(), await response.read()
                 except TooManyRedirects:
@@ -235,6 +236,5 @@ class Crawler:
 # TODO: Handle url compositions
     # for example: 'https://www.bbc.co.uk/sport/olympics/rio-2016/schedule/sports/diving/ /sport/olympics/rio-2016/schedule/sports/modern-pentathlon'
     # or: '/sport/olympics/rio-2016/schedule/sports/diving/ /sport/olympics/rio-2016/schedule/sports/modern-pentathlon'
-# TODO: Limit number of redirections.
 # TODO: Limit the depth of the request querry. (ex. number of '/' or length of request string)
 # TODO: Implement a stop function to stop crawling with current data
