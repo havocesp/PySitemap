@@ -151,7 +151,7 @@ class Crawler:
                         print('HTTP Error code=', e, ' ', url)
                 except (AssertionError, Exception) as e:
                     if not self._no_verbose:
-                        print('Error raised while requesting "url": ', e)
+                        print('Error raised while requesting "', url, '": ', e)
                 if tries_left == 0:
                     self._add_url(url, self._error_links)
                     return url, None, None
