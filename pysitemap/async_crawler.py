@@ -231,3 +231,5 @@ class Crawler:
 # TODO: Handle url compositions
     # for example: 'https://www.bbc.co.uk/sport/olympics/rio-2016/schedule/sports/diving/ /sport/olympics/rio-2016/schedule/sports/modern-pentathlon'
     # or: '/sport/olympics/rio-2016/schedule/sports/diving/ /sport/olympics/rio-2016/schedule/sports/modern-pentathlon'
+# TODO: Limit number of redirections.
+# TODO: Limit the depth of the request querry. (ex. number of '/' or length of request string)
