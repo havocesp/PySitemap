@@ -1,12 +1,11 @@
-from urllib.parse import urlsplit, urlunsplit, urljoin, urlparse
-import aiohttp
-from aiohttp import TCPConnector, ClientSession
-from aiohttp import ClientResponseError, ClientError, ClientConnectionError, ClientOSError, ServerConnectionError
-from aiohttp.client import ClientTimeout
 import asyncio
 import re
+from urllib.parse import urlsplit, urlunsplit, urljoin, urlparse
 # from datetime import datetime
 import tldextract
+from aiohttp import ClientResponseError, ClientError, ClientConnectionError, ClientOSError, ServerConnectionError
+from aiohttp import TCPConnector, ClientSession
+from aiohttp.client import ClientTimeout
 
 
 # https://github.com/Guiorgy/PySitemap

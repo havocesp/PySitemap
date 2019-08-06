@@ -1,10 +1,10 @@
-import urllib.request
-from urllib.parse import urlsplit, urlunsplit, urljoin, urlparse
-from urllib.error import URLError, HTTPError
 import re
+import ssl
+import urllib.request
+from urllib.error import URLError, HTTPError
+from urllib.parse import urlsplit, urlunsplit, urljoin, urlparse
 # from datetime import datetime
 import tldextract
-import ssl
 
 
 # https://github.com/Guiorgy/PySitemap
