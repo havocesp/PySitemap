@@ -71,6 +71,7 @@ class Crawler(_Crawler):
                                 del steps[requested_url]
                             except KeyError:
                                 pass
+                            urls_to_request.discard(url)
                             if not self._same_domain(url) or url in self._graph:
                                 continue
 
