@@ -145,7 +145,7 @@ class Crawler:
 
     def _request(self, urls):
         async def __fetch(session, url):
-            for tries_left in reversed(range(0, self._retry_times)):
+            for i in range(0, self._retry_times):
                 try:
                     async with session.get(url, max_redirects=0) as response:
                         response.raise_for_status()
@@ -160,9 +160,8 @@ class Crawler:
                 except (AssertionError, Exception) as e:
                     if not self._no_verbose:
                         print('Error raised while requesting "', url, '": ', e)
-                if tries_left == 0:
-                    self._add_url(url, self._error_links)
-                    return url, None, None
+            self._add_url(url, self._error_links)
+            return url, None, None
 
         async def __fetch_all():
             if self._timeout:
