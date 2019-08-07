@@ -126,7 +126,7 @@ class _Crawler(ABC):
         scheme, netloc, path, qs, anchor = urlsplit(url)
         if all([url != '',
                 scheme in ['http', 'https', ''],
-                not self._max_path_depth or (self._max_path_depth and path.count('/') <= self._max_path_depth)]):
+                not self._max_path_depth or path.count('/') <= self._max_path_depth]):
             return True
         else:
             return False
