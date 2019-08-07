@@ -45,10 +45,13 @@ class Crawler(_Crawler):
             if self._stop:
                 return
 
-            while True:
-                url = urls_to_request.pop()
-                if not self._max_steps_depth or steps[url] <= self._max_steps_depth:
-                    break
+            try:
+                while True:
+                    url = urls_to_request.pop()
+                    if not self._max_steps_depth or steps[url] <= self._max_steps_depth:
+                        break
+            except KeyError:
+                break
 
             if not self._no_verbose:
                 print('Found:', len(self._graph.keys()), 'Parsing:', url)
