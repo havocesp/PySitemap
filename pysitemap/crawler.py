@@ -75,7 +75,7 @@ class Crawler(_Crawler):
                         pass
                     url = parsed_url
                     if not self._same_domain(url) or url in self._graph:
-                        return
+                        continue
 
                 # TODO Handle last modified
                 # last_modified = response.info()['Last-Modified']
