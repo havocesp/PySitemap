@@ -32,7 +32,7 @@ class Crawler:
         max_redirections = 10
 
     def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None, build_graph=False,
-                 verify_ssl=False, max_redirects=10):
+                 verify_ssl=False, max_redirects=10, max_path_depth=None):
 
         self._url = self._normalize(url)
         self._host = urlsplit(self._url).netloc
@@ -47,7 +47,8 @@ class Crawler:
         self._build_graph = build_graph
         self._graph = {}
         self._context = None if verify_ssl else self._get_default_context()
-        self._max_redirects = max_redirects if max_redirects and max_redirects >= 0 else 10
+        self._max_path_depth = max_path_depth if max_path_depth and max_path_depth > 0 else None
+        self._max_redirects = max_redirects + 1 if max_redirects and max_redirects >= 0 else 10
 
         if self._max_redirects != 10:
             self._HTTPRedirectHandler.max_redirections = self._max_redirects
@@ -196,7 +197,9 @@ class Crawler:
 
     def _is_url(self, url):
         scheme, netloc, path, qs, anchor = urlsplit(url)
-        if url != '' and scheme in ['http', 'https', '']:
+        if all([url != '',
+                scheme in ['http', 'https', ''],
+                not self._max_path_depth or (self._max_path_depth and path.count('/') <= self._max_path_depth)]):
             return True
         else:
             return False

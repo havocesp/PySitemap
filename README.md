@@ -46,7 +46,7 @@ You can specify timeout for http requests (only in asynchronous mode)
 python main.py --url="https://www.finstead.com" --timeout=300
 ```
 
-You can specify how many times should we retry urls that returned with errors (only in asynchronous mode)
+You can specify how many times it should retry urls that returned with error codes (only in asynchronous mode)
 ```
 python main.py --url="https://www.finstead.com" --retry=1
 ```
@@ -55,6 +55,17 @@ You can specify the maximum numbers of simultaneous get requests the crawler can
 ```
 python main.py --url="https://www.finstead.com" --max-requests=100
 ```
+
+You can specify the maximum numbers of redirections a get requests is allowed to do
+```
+python main.py --url="https://www.finstead.com" --max-redirects=10
+```
+
+You can specify the maximum depth of path
+```
+python main.py --url="https://www.finstead.com" --max-path-depth=5
+```
+
 
 ## Usage
 
