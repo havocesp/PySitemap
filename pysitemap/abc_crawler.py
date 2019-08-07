@@ -48,7 +48,7 @@ class _Crawler(ABC):
     def start(self):
         if not self._url:
             return None
-        self._crawl(self._url)
+        self._crawl(self._normalize(self._url))
         if not self._no_verbose and self._error_links:
             print('Failed to parse: ', self._error_links)
         return self._graph.keys()
@@ -109,6 +109,8 @@ class _Crawler(ABC):
         scheme, netloc, path, qs, anchor = urlsplit(url)
         # print(url, ' ', scheme, ' ', netloc, ' ', path, ' ', qs, ' ', anchor)
         anchor = ''
+        if scheme == 'https':
+            scheme = 'http'
         return urlunsplit((scheme, netloc, path, qs, anchor))
 
     def _is_internal(self, url):
