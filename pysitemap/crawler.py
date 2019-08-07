@@ -109,7 +109,8 @@ class Crawler(_Crawler):
 
                 links = [link for link in links
                          if link not in self._graph
-                         and link not in self._error_links]
+                         and link not in self._error_links
+                         and link not in urls_to_request]
 
                 urls_to_request.update(links)
                 try:
