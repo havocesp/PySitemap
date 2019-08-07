@@ -5,6 +5,11 @@ from urllib.parse import urlsplit, urlunsplit
 from tldextract import tldextract
 
 
+# https://github.com/Guiorgy/PySitemap
+# Fork of
+# https://github.com/Cartman720/PySitemap
+
+
 class _Crawler(ABC):
     DEFAULT_TIMEOUT = socket._GLOBAL_DEFAULT_TIMEOUT
 
@@ -17,7 +22,8 @@ class _Crawler(ABC):
     }
 
     def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None, timeout=DEFAULT_TIMEOUT,
-                 retry_times=1, build_graph=False, verify_ssl=False, max_redirects=10, max_path_depth=None):
+                 retry_times=1, build_graph=False, verify_ssl=False, max_redirects=10, max_path_depth=None,
+                 max_steps_depth=0):
 
         self._url = self._normalize(url)
         self._host = urlsplit(self._url).netloc
@@ -37,6 +43,7 @@ class _Crawler(ABC):
         self._max_path_depth = max_path_depth if max_path_depth and max_path_depth > 0 else None
         self._stop = False
         self._max_redirects = max_redirects + 1 if max_redirects and max_redirects >= 0 else 10
+        self._max_steps_depth = max_steps_depth if max_steps_depth and max_steps_depth >= 0 else 0
 
     def start(self):
         if not self._url:

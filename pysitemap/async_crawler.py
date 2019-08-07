@@ -18,16 +18,19 @@ class Crawler(crawler.abc._Crawler):
 
     def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None, timeout=DEFAULT_TIMEOUT,
                  retry_times=1, max_requests=100, build_graph=False, verify_ssl=False, max_redirects=10,
-                 max_path_depth=None):
+                 max_path_depth=None, max_steps_depth=0):
         crawler.abc._Crawler.__init__(url, exclude=exclude, domain=domain, no_verbose=no_verbose,
                                       request_header=request_header, timeout=timeout, retry_times=retry_times,
                                       build_graph=build_graph, verify_ssl=verify_ssl, max_redirects=max_redirects,
-                                      max_path_depth=max_path_depth)
+                                      max_path_depth=max_path_depth, max_steps_depth=max_steps_depth)
 
         self._max_requests = max_requests + 1 if max_requests and max_requests > 0 else 100
 
     def _crawl(self, root_url):
         urls_to_request = {root_url}
+        steps = {}
+        if self._max_steps_depth:
+            steps[root_url] = 0
 
         while urls_to_request:
             if self._stop:
@@ -35,8 +38,10 @@ class Crawler(crawler.abc._Crawler):
 
             urls = []
             try:
-                for i in range(0, self._max_requests):
-                    urls.append(urls_to_request.pop())
+                while len(urls) < self._max_requests:
+                    url = urls_to_request.pop()
+                    if not self._max_steps_depth or steps[url] < self._max_steps_depth:
+                        urls.append(url)
             except KeyError:
                 # There were less than self._max_requests urls in urls_to_request set
                 pass
@@ -51,9 +56,15 @@ class Crawler(crawler.abc._Crawler):
                         return
 
                     if url:
+                        step = steps[requested_url] + 1
+
                         # Handle redirects
                         if requested_url != url:
                             self._add_graph(requested_url, url)
+                            try:
+                                del steps[requested_url]
+                            except KeyError:
+                                pass
                             if not self._same_domain(url) or url in self._graph:
                                 continue
 
@@ -96,6 +107,12 @@ class Crawler(crawler.abc._Crawler):
                                  and link not in urls]
 
                         urls_to_request.update(links)
+                        try:
+                            del steps[requested_url]
+                        except KeyError:
+                            pass
+                        for link in links:
+                            steps[link] = step
 
     # def _chunks(self, l, n):
     #     for i in range(0, len(l), n):

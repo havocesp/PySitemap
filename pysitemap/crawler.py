@@ -24,11 +24,11 @@ class Crawler(crawler.abc._Crawler):
 
     def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None,
                  timeout=crawler.abc._Crawler.DEFAULT_TIMEOUT, retry_times=1, build_graph=False, verify_ssl=False,
-                 max_redirects=10, max_path_depth=None):
+                 max_redirects=10, max_path_depth=None, max_steps_depth=0):
         crawler.abc._Crawler.__init__(url, exclude=exclude, domain=domain, no_verbose=no_verbose,
                                       request_header=request_header, timeout=timeout, retry_times=retry_times,
                                       build_graph=build_graph, verify_ssl=verify_ssl, max_redirects=max_redirects,
-                                      max_path_depth=max_path_depth)
+                                      max_path_depth=max_path_depth, max_steps_depth=max_steps_depth)
 
         self._context = None if verify_ssl else self._get_default_context()
         if self._max_redirects != 10:

@@ -24,6 +24,7 @@ parser.add_argument('--max-requests', action='store', default=100,
 parser.add_argument('--verify-ssl', action='store_true', default='', help='skip certificate verification')
 parser.add_argument('--max-redirects', action='store', default=10, help='maximum total number of redirections allowed')
 parser.add_argument('--max-path-depth', action='store', default='', help="maximum path depth (the amount of slashes ('/') after the domain)")
+parser.add_argument('--max-steps-depth', action='store', default=0, help='maximum requests from the given url to crawl')
 
 # parsing parameters
 args = parser.parse_args()
@@ -37,10 +38,11 @@ if args.asynchronous:
     crawler = AsyncCrawler(url, exclude=args.exclude, domain=args.domain, no_verbose=args.no_verbose,
                            timeout=args.timeout, retry_times=args.retry, max_requests=args.max_requests,
                            verify_ssl=args.verify_ssl, max_redirects=args.max_redirects,
-                           max_path_depth=args.max_path_depth)
+                           max_path_depth=args.max_path_depth, max_steps_depth=args.max_steps_depth)
 else:
-    crawler = Crawler(url, exclude=args.exclude, domain=args.domain, no_verbose=args.no_verbose,
-                      verify_ssl=args.verify_ssl, max_redirects=args.max_redirects, max_path_depth=args.max_path_depth)
+    crawler = Crawler(url, exclude=args.exclude, domain=args.domain, no_verbose=args.no_verbose, timeout=args.timeout,
+                      retry_times=args.retry, verify_ssl=args.verify_ssl, max_redirects=args.max_redirects,
+                      max_path_depth=args.max_path_depth, max_steps_depth=args.max_steps_depth)
 
 # fetch links
 links = crawler.start()
