@@ -40,9 +40,9 @@ class _Crawler(ABC):
         self._build_graph = build_graph
         self._graph = {}
         self._verify_ssl = verify_ssl if verify_ssl is not None else False
-        self._max_path_depth = max_path_depth if max_path_depth and max_path_depth > 0 else None
+        self._max_path_depth = max_path_depth + 2 if max_path_depth and max_path_depth > 0 else None
         self._stop = False
-        self._max_redirects = max_redirects + 1 if max_redirects and max_redirects >= 0 else 10
+        self._max_redirects = max_redirects if max_redirects and max_redirects >= 0 else 10
         self._max_steps_depth = max_steps_depth if max_steps_depth and max_steps_depth >= 0 else 0
 
     def start(self):
@@ -80,18 +80,22 @@ class _Crawler(ABC):
     def _request(self, url):
         pass
 
+    def _url_excluded(self, url):
+        excluded = False
+
+        if self._exclude:
+            for pattern in self._exclude:
+                excluded |= (re.search(pattern, url) is not None)
+
+        if self._max_path_depth:
+            excluded |= url.count('/') > self._max_path_depth
+
+        return excluded
+
     def _add_url(self, url, url_list):
         url = self._normalize(url)
-        if url:
-            not_in_list = url not in url_list
-
-            excluded = False
-            if self._exclude:
-                for pattern in self._exclude:
-                    excluded |= (re.search(pattern, url) is not None)
-
-            if not_in_list and not excluded:
-                url_list.append(url)
+        if url and url not in url_list and not self._url_excluded(url):
+            url_list.append(url)
 
     def _add_graph(self, source, url):
         if source not in self._graph:
@@ -113,6 +117,8 @@ class _Crawler(ABC):
         anchor = ''
         if scheme == 'https':
             scheme = 'http'
+        if not netloc.startswith('www.'):
+            netloc = 'www.' + netloc
         return urlunsplit((scheme, netloc, path, qs, anchor))
 
     def _is_internal(self, url):
@@ -135,9 +141,7 @@ class _Crawler(ABC):
 
     def _is_url(self, url):
         scheme, netloc, path, qs, anchor = urlsplit(url)
-        if all([url != '',
-                scheme in ['http', 'https', ''],
-                not self._max_path_depth or path.count('/') <= self._max_path_depth]):
+        if url != '' and scheme in ['http', 'https', '']:
             return True
         else:
             return False

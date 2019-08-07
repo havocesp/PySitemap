@@ -63,20 +63,24 @@ class Crawler(_Crawler):
 
             response = self._request(url)
             if response:
-                step = steps[url] + 1
+                step = 0
+                if self._max_steps_depth and url in steps:
+                    step = steps[url] + 1
+                    del steps[url]
 
                 # Handle redirects
                 parsed_url = self._normalize(response.geturl())
                 if url != parsed_url:
-                    self._add_graph(url, parsed_url)
-                    try:
-                        del steps[url]
-                    except KeyError:
-                        pass
-                    url = parsed_url
-                    urls_to_request.discard(url)
-                    if not self._same_domain(url) or url in self._graph:
+                    if not self._same_domain(parsed_url) or self._url_excluded(parsed_url):
                         continue
+                    self._add_graph(url, parsed_url)
+                    urls_to_request.discard(parsed_url)
+                    if parsed_url in steps:
+                        step = min(step, steps[parsed_url] + 1)
+                        del steps[parsed_url]
+                    if parsed_url in self._graph:
+                        continue
+                    url = parsed_url
 
                 # TODO Handle last modified
                 # last_modified = response.info()['Last-Modified']
@@ -114,12 +118,10 @@ class Crawler(_Crawler):
                          and link not in urls_to_request]
 
                 urls_to_request.update(links)
-                try:
-                    del steps[url]
-                except KeyError:
-                    pass
-                for link in links:
-                    steps[link] = step
+
+                if self._max_steps_depth:
+                    for link in links:
+                        steps[link] = step
 
     def _request(self, url):
         for i in range(0, self._retry_times):

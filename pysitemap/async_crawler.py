@@ -62,17 +62,21 @@ class Crawler(_Crawler):
 
                     if url:
                         url = self._normalize(url)
-                        step = steps[requested_url] + 1
+                        step = 0
+                        if self._max_steps_depth and requested_url in steps:
+                            step = steps[requested_url] + 1
+                            del steps[requested_url]
 
                         # Handle redirects
                         if requested_url != url:
+                            if not self._same_domain(url) or self._url_excluded(url):
+                                continue
                             self._add_graph(requested_url, url)
-                            try:
-                                del steps[requested_url]
-                            except KeyError:
-                                pass
                             urls_to_request.discard(url)
-                            if not self._same_domain(url) or url in self._graph:
+                            if url in steps:
+                                step = min(step, steps[url] + 1)
+                                del steps[url]
+                            if url in self._graph:
                                 continue
 
                         # TODO Handle last modified
@@ -115,12 +119,10 @@ class Crawler(_Crawler):
                                  and link not in urls_to_request]
 
                         urls_to_request.update(links)
-                        try:
-                            del steps[requested_url]
-                        except KeyError:
-                            pass
-                        for link in links:
-                            steps[link] = step
+
+                        if self._max_steps_depth:
+                            for link in links:
+                                steps[link] = step
 
     # def _chunks(self, l, n):
     #     for i in range(0, len(l), n):
@@ -130,7 +132,7 @@ class Crawler(_Crawler):
         async def __fetch(session, url):
             for i in range(0, self._retry_times):
                 try:
-                    async with session.get(url, max_redirects=0) as response:
+                    async with session.get(url, max_redirects=self._max_redirects) as response:
                         response.raise_for_status()
                         return url, response.url.human_repr(), await response.read()
                 except TooManyRedirects:
