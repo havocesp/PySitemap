@@ -156,5 +156,4 @@ class Crawler(_Crawler):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(__fetch_all())
 
-# TODO: Limit the depth of the graph
 # TODO: Implement a stop function to stop crawling with current data
