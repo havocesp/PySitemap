@@ -46,6 +46,7 @@ class Crawler:
         self._verify_ssl = verify_ssl if verify_ssl is not None else False
         self._max_redirects = max_redirects if max_redirects and max_redirects >= 0 else 10
         self._max_path_depth = max_path_depth if max_path_depth and max_path_depth > 0 else None
+        self._stop = False
 
     def start(self):
         if not self._url:
@@ -78,6 +79,9 @@ class Crawler:
         urls_to_request = {root_url}
 
         while urls_to_request:
+            if self._stop:
+                return
+
             urls = []
             try:
                 for i in range(0, self._max_requests):
@@ -92,6 +96,9 @@ class Crawler:
             responses = self._request(urls)
             if responses:
                 for (requested_url, url, html) in responses:
+                    if self._stop:
+                        return
+
                     if url:
                         # Handle redirects
                         if requested_url != url:
@@ -236,6 +243,9 @@ class Crawler:
         if domain and suffix:
             return domain + '.' + suffix
         return None
+
+    def stop(self, stop_crawling=True):
+        self._stop = stop_crawling
 
 # TODO: Limit the depth of the graph
 # TODO: Implement a stop function to stop crawling with current data

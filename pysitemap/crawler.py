@@ -49,6 +49,7 @@ class Crawler:
         self._graph = {}
         self._context = None if verify_ssl else self._get_default_context()
         self._max_path_depth = max_path_depth if max_path_depth and max_path_depth > 0 else None
+        self._stop = False
         self._max_redirects = max_redirects + 1 if max_redirects and max_redirects >= 0 else 10
 
         if self._max_redirects != 10:
@@ -84,6 +85,9 @@ class Crawler:
         urls = {root_url}
 
         while urls:
+            if self._stop:
+                return
+
             url = urls.pop()
 
             if not self._no_verbose:
@@ -212,3 +216,6 @@ class Crawler:
         if domain and suffix:
             return domain + '.' + suffix
         return None
+
+    def stop(self, stop_crawling=True):
+        self._stop = stop_crawling
