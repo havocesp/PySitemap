@@ -63,6 +63,14 @@ def convert_graph(dict_graph):
     return graph
 
 
+def _ensure_right_type(graph):
+    if type(graph) == networkx.classes.digraph.DiGraph:
+        return graph
+    if type(graph) == dict:
+        return convert_graph(graph)
+    return None
+
+
 # Save graph
 # Convert the graph to json ready format using networkx.readwrite.json_graph
 # Serialize the result using ujson
@@ -73,6 +81,11 @@ def save_graph(graph, save_path=_get_module_root_dir(), no_verbose=False):
         return
     if not save_path.endswith('/'):
         save_path += '/'
+    graph = _ensure_right_type(graph)
+    if graph is None:
+        if not no_verbose:
+            print('Failed to save graph. graph should be a dict or networkx.classes.digraph.DiGraph', graph)
+        return
     with open(save_path + 'graph.json', 'w') as file:
         try:
             file.write(ujson.dumps(json_graph.node_link_data(graph)))
@@ -106,8 +119,13 @@ def export_graph(graph, save_path=_get_module_root_dir(), no_verbose=False):
         return
     if not save_path.endswith('/'):
         save_path += '/'
+    graph = _ensure_right_type(graph)
+    if graph is None:
+        if not no_verbose:
+            print('Failed to export graph. graph should be a dict or networkx.classes.digraph.DiGraph', graph)
+        return
     try:
         gexf.write_gexf(graph, save_path + 'graph.gexf')
     except IOError as e:
         if not no_verbose:
-            print('Failed to save graph: ', e.reason)
+            print('Failed to export graph: ', e.reason)
