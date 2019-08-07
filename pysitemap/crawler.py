@@ -36,23 +36,35 @@ class Crawler(_Crawler):
             request.build_opener(self._HTTPRedirectHandler)
 
     def _crawl(self, root_url):
-        urls = {root_url}
+        urls_to_request = {root_url}
+        steps = {}
+        if self._max_steps_depth:
+            steps[root_url] = 0
 
-        while urls:
+        while urls_to_request:
             if self._stop:
                 return
 
-            url = urls.pop()
+            while True:
+                url = urls_to_request.pop()
+                if not self._max_steps_depth or steps[url] <= self._max_steps_depth:
+                    break
 
             if not self._no_verbose:
                 print('Found:', len(self._graph.keys()), 'Parsing:', url)
 
             response = self._request(url)
             if response:
+                step = steps[url] + 1
+
                 # Handle redirects
                 parsed_url = response.geturl()
                 if url != parsed_url:
                     self._add_graph(url, parsed_url)
+                    try:
+                        del steps[url]
+                    except KeyError:
+                        pass
                     url = parsed_url
                     if not self._same_domain(url) or url in self._graph:
                         return
@@ -87,7 +99,18 @@ class Crawler(_Crawler):
                 if self._build_graph:
                     self._add_all_graph(url, links)
 
-                urls.update([link for link in links if link not in self._graph and link not in self._error_links])
+                links = [link for link in links
+                         if link not in self._graph
+                         and link not in self._error_links]
+
+                urls_to_request.update(links)
+
+                try:
+                    del steps[url]
+                except KeyError:
+                    pass
+                for link in links:
+                    steps[link] = step
 
     def _request(self, url):
         for i in range(0, self._retry_times):
