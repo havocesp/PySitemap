@@ -22,11 +22,13 @@ class Crawler(crawler.abc._Crawler):
     class _HTTPRedirectHandler(HTTPRedirectHandler):
         max_redirections = 10
 
-    def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None, retry_times=1,
-                 build_graph=False, verify_ssl=False, max_redirects=10, max_path_depth=None):
+    def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None,
+                 timeout=crawler.abc._Crawler.DEFAULT_TIMEOUT, retry_times=1, build_graph=False, verify_ssl=False,
+                 max_redirects=10, max_path_depth=None):
         crawler.abc._Crawler.__init__(url, exclude=exclude, domain=domain, no_verbose=no_verbose,
-                                      request_header=request_header, retry_times=retry_times, build_graph=build_graph,
-                                      verify_ssl=verify_ssl, max_redirects=max_redirects, max_path_depth=max_path_depth)
+                                      request_header=request_header, timeout=timeout, retry_times=retry_times,
+                                      build_graph=build_graph, verify_ssl=verify_ssl, max_redirects=max_redirects,
+                                      max_path_depth=max_path_depth)
 
         self._context = None if verify_ssl else self._get_default_context()
         if self._max_redirects != 10:
@@ -91,7 +93,7 @@ class Crawler(crawler.abc._Crawler):
         for i in range(0, self._retry_times):
             try:
                 req = request.Request(url, headers=self._request_headers)
-                return request.urlopen(req, context=self._context)
+                return request.urlopen(req, context=self._context, timeout=self._timeout)
             except HTTPError as e:
                 if not self._no_verbose:
                     print('HTTP Error code: ', e.code, ' ', url)

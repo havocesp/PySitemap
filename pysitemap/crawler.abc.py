@@ -1,10 +1,13 @@
 import re
+import socket
 from abc import ABC, abstractmethod
 from urllib.parse import urlsplit, urlunsplit
 from tldextract import tldextract
 
 
 class _Crawler(ABC):
+    DEFAULT_TIMEOUT = socket._GLOBAL_DEFAULT_TIMEOUT
+
     _request_headers = {
         'Accept-Language': 'en-US,en;q=0.5',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0',
@@ -13,8 +16,8 @@ class _Crawler(ABC):
         'Connection': 'keep-alive'
     }
 
-    def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None, retry_times=1,
-                 build_graph=False, verify_ssl=False, max_redirects=10, max_path_depth=None):
+    def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None, timeout=DEFAULT_TIMEOUT,
+                 retry_times=1, build_graph=False, verify_ssl=False, max_redirects=10, max_path_depth=None):
 
         self._url = self._normalize(url)
         self._host = urlsplit(self._url).netloc
@@ -26,6 +29,7 @@ class _Crawler(ABC):
             self._request_headers = request_header
         if request_header == {}:
             self._request_header = None
+        self._timeout = timeout if timeout else self.DEFAULT_TIMEOUT
         self._retry_times = retry_times
         self._build_graph = build_graph
         self._graph = {}

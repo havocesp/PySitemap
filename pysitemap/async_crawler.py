@@ -20,10 +20,10 @@ class Crawler(crawler.abc._Crawler):
                  retry_times=1, max_requests=100, build_graph=False, verify_ssl=False, max_redirects=10,
                  max_path_depth=None):
         crawler.abc._Crawler.__init__(url, exclude=exclude, domain=domain, no_verbose=no_verbose,
-                                      request_header=request_header, retry_times=retry_times, build_graph=build_graph,
-                                      verify_ssl=verify_ssl, max_redirects=max_redirects, max_path_depth=max_path_depth)
+                                      request_header=request_header, timeout=timeout, retry_times=retry_times,
+                                      build_graph=build_graph, verify_ssl=verify_ssl, max_redirects=max_redirects,
+                                      max_path_depth=max_path_depth)
 
-        self._timeout = timeout if timeout else self.DEFAULT_TIMEOUT
         self._max_requests = max_requests + 1 if max_requests and max_requests > 0 else 100
 
     def _crawl(self, root_url):
