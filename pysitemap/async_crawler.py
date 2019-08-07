@@ -40,7 +40,7 @@ class Crawler(_Crawler):
             try:
                 while len(urls) < self._max_requests:
                     url = urls_to_request.pop()
-                    if not self._max_steps_depth or steps[url] < self._max_steps_depth:
+                    if not self._max_steps_depth or steps[url] <= self._max_steps_depth:
                         urls.append(url)
             except KeyError:
                 # There were less than self._max_requests urls in urls_to_request set
