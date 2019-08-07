@@ -42,7 +42,13 @@ class Crawler(_Crawler):
                     url = urls_to_request.pop()
                     if not self._max_steps_depth or steps[url] <= self._max_steps_depth:
                         urls.append(url)
+                    else:
+                        try:
+                            del steps[url]
+                        except KeyError:
+                            pass
             except KeyError:
+                print(self._graph, '\n', urls_to_request, '\n', steps)
                 # There were less than self._max_requests urls in urls_to_request set
                 pass
 
@@ -56,6 +62,7 @@ class Crawler(_Crawler):
                         return
 
                     if url:
+                        url = self._normalize(url)
                         step = steps[requested_url] + 1
 
                         # Handle redirects
