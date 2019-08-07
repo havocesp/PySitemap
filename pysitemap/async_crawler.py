@@ -5,7 +5,7 @@ from aiohttp import ClientResponseError, ClientError, ClientConnectionError, Cli
 from aiohttp import TCPConnector, ClientSession
 from aiohttp.client import ClientTimeout
 from aiohttp.client_exceptions import TooManyRedirects
-from pysitemap import crawler
+from pysitemap.abc_crawler import _Crawler
 
 
 # https://github.com/Guiorgy/PySitemap
@@ -13,16 +13,16 @@ from pysitemap import crawler
 # https://github.com/Cartman720/PySitemap
 
 
-class Crawler(crawler.abc._Crawler):
+class Crawler(_Crawler):
     DEFAULT_TIMEOUT = ClientTimeout(total=5*60)
 
     def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None, timeout=DEFAULT_TIMEOUT,
                  retry_times=1, max_requests=100, build_graph=False, verify_ssl=False, max_redirects=10,
                  max_path_depth=None, max_steps_depth=0):
-        crawler.abc._Crawler.__init__(url, exclude=exclude, domain=domain, no_verbose=no_verbose,
-                                      request_header=request_header, timeout=timeout, retry_times=retry_times,
-                                      build_graph=build_graph, verify_ssl=verify_ssl, max_redirects=max_redirects,
-                                      max_path_depth=max_path_depth, max_steps_depth=max_steps_depth)
+        _Crawler.__init__(self, url, exclude=exclude, domain=domain, no_verbose=no_verbose,
+                          request_header=request_header, timeout=timeout, retry_times=retry_times,
+                          build_graph=build_graph, verify_ssl=verify_ssl, max_redirects=max_redirects,
+                          max_path_depth=max_path_depth, max_steps_depth=max_steps_depth)
 
         self._max_requests = max_requests + 1 if max_requests and max_requests > 0 else 100
 

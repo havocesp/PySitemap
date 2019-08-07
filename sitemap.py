@@ -3,6 +3,12 @@ from pysitemap.crawler import Crawler
 from pysitemap.async_crawler import Crawler as AsyncCrawler
 import ssl
 
+
+# https://github.com/Guiorgy/PySitemap
+# Fork of
+# https://github.com/Cartman720/PySitemap
+
+
 # monkey patch ssl
 # ssl.match_hostname = lambda cert, hostname: hostname == cert['subjectAltName'][0][1]
 ssl.match_hostname = lambda cert, hostname: True
