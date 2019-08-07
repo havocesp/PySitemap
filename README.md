@@ -46,7 +46,7 @@ You can specify timeout for http requests (only in asynchronous mode)
 python main.py --url="https://www.finstead.com" --timeout=300
 ```
 
-You can specify how many times it should retry urls that returned with error codes (only in asynchronous mode)
+You can specify how many times it should retry urls that returned with error codes
 ```
 python main.py --url="https://www.finstead.com" --retry=1
 ```

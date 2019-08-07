@@ -31,8 +31,8 @@ class Crawler:
     class _HTTPRedirectHandler(HTTPRedirectHandler):
         max_redirections = 10
 
-    def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None, build_graph=False,
-                 verify_ssl=False, max_redirects=10, max_path_depth=None):
+    def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None, retry_times=1,
+                 build_graph=False, verify_ssl=False, max_redirects=10, max_path_depth=None):
 
         self._url = self._normalize(url)
         self._host = urlsplit(self._url).netloc
@@ -44,6 +44,7 @@ class Crawler:
             self._request_headers = request_header
         if request_header == {}:
             self._request_header = None
+        self._retry_times = retry_times
         self._build_graph = build_graph
         self._graph = {}
         self._context = None if verify_ssl else self._get_default_context()
@@ -131,20 +132,22 @@ class Crawler:
                 urls.update([link for link in links if link not in self._graph and link not in self._error_links])
 
     def _request(self, url):
-        try:
-            req = request.Request(url, headers=self._request_headers)
-            return request.urlopen(req, context=self._context)
-        except HTTPError as e:
-            if not self._no_verbose:
-                print('HTTP Error code: ', e.code, ' ', url)
-            self._add_url(url, self._error_links)
-        except URLError as e:
-            if not self._no_verbose:
-                print('Error: Failed to reach server. ', e.reason)
-        except ValueError as e:
-            if not self._no_verbose:
-                print('Error: Failed read url. ', e)
-        return None
+        for i in range(0, self._retry_times):
+            try:
+                req = request.Request(url, headers=self._request_headers)
+                return request.urlopen(req, context=self._context)
+            except HTTPError as e:
+                if not self._no_verbose:
+                    print('HTTP Error code: ', e.code, ' ', url)
+                self._add_url(url, self._error_links)
+            except URLError as e:
+                if not self._no_verbose:
+                    print('Error: Failed to reach server. ', e.reason)
+            except ValueError as e:
+                if not self._no_verbose:
+                    print('Error: Failed read url. ', e)
+        self._add_url(url, self._error_links)
+        return url, None, None
 
     def _add_url(self, url, url_list):
         url = self._normalize(url)
