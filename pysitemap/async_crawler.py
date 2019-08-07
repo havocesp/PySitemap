@@ -48,7 +48,6 @@ class Crawler(_Crawler):
                         except KeyError:
                             pass
             except KeyError:
-                print(self._graph, '\n', urls_to_request, '\n', steps)
                 # There were less than self._max_requests urls in urls_to_request set
                 pass
 
