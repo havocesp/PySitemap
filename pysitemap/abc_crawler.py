@@ -106,6 +106,8 @@ class _Crawler(ABC):
         self._graph[source].update(urls)
 
     def _normalize(self, url):
+        if url.endswith('/'):
+            url = url[:-1]
         scheme, netloc, path, qs, anchor = urlsplit(url)
         # print(url, ' ', scheme, ' ', netloc, ' ', path, ' ', qs, ' ', anchor)
         anchor = ''
