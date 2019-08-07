@@ -24,6 +24,7 @@ class Crawler(crawler.abc._Crawler):
                                       verify_ssl=verify_ssl, max_redirects=max_redirects, max_path_depth=max_path_depth)
 
         self._timeout = timeout if timeout else self.DEFAULT_TIMEOUT
+        self._max_requests = max_requests + 1 if max_requests and max_requests > 0 else 100
 
     def _crawl(self, root_url):
         urls_to_request = {root_url}
