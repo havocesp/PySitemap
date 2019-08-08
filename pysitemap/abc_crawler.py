@@ -83,15 +83,7 @@ class _Crawler(ABC):
     _pattern = '<a [^>]*href=[\'|"](.*?)[\'"].*?>'
 
     def _extract_urls(self, html):
-        try:
-            from bs4 import BeautifulSoup
-            soup = BeautifulSoup(html)
-            links = []
-            for link in soup.findAll('a', attrs={'href': re.compile("^http://")}):
-                links.append(link.get('href'))
-            return links
-        except ModuleNotFoundError:
-            return re.findall(self._pattern, html)
+        return re.findall(self._pattern, html)
 
     def _url_excluded(self, url):
         excluded = False
