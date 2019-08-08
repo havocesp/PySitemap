@@ -159,3 +159,4 @@ class Crawler(_Crawler):
         return loop.run_until_complete(__fetch_all())
 
 # TODO: Implement a stop function to stop crawling with current data
+# TODO: Javascript! For example: https://c4assets.com/ is loaded dynamically, so this crawler finds no links in it!
