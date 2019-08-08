@@ -83,7 +83,15 @@ class _Crawler(ABC):
     _pattern = '<a [^>]*href=[\'|"](.*?)[\'"].*?>'
 
     def _extract_urls(self, html):
-        return re.findall(self._pattern, html)
+        try:
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(html)
+            links = []
+            for link in soup.findAll('a', attrs={'href': re.compile("^http://")}):
+                links.append(link.get('href'))
+            return links
+        except ModuleNotFoundError:
+            return re.findall(self._pattern, html)
 
     def _url_excluded(self, url):
         excluded = False
@@ -115,16 +123,20 @@ class _Crawler(ABC):
         self._graph[source].update(urls)
 
     def _normalize(self, url):
-        if url.endswith('/'):
-            url = url[:-1]
-        scheme, netloc, path, qs, anchor = urlsplit(url)
-        # print(url, ' ', scheme, ' ', netloc, ' ', path, ' ', qs, ' ', anchor)
-        anchor = ''
-        if scheme == 'https' or scheme == '':
-            scheme = 'http'
-        if not netloc.startswith('www.'):
-            netloc = 'www.' + netloc
-        return urlunsplit((scheme, netloc, path, qs, anchor))
+        try:
+            from url_normalize import url_normalize
+            return url_normalize(url, default_scheme='http')
+        except ModuleNotFoundError:
+            if url.endswith('/'):
+                url = url[:-1]
+            scheme, netloc, path, qs, anchor = urlsplit(url)
+            # print(url, ' ', scheme, ' ', netloc, ' ', path, ' ', qs, ' ', anchor)
+            anchor = ''
+            if scheme == 'https' or scheme == '':
+                scheme = 'http'
+            if not netloc.startswith('www.'):
+                netloc = 'www.' + netloc
+            return urlunsplit((scheme, netloc, path, qs, anchor))
 
     def _is_internal(self, url):
         host = urlsplit(url).netloc
