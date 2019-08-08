@@ -94,12 +94,9 @@ class Crawler(_Crawler):
                         if not html:
                             continue
 
-                        page = str(html)
-                        pattern = '<a [^>]*href=[\'|"](.*?)[\'"].*?>'
-
                         links = []
 
-                        for match in re.findall(pattern, page):
+                        for match in self._extract_urls(str(html)):
                             for link in match.split():
                                 is_url = self._is_url(link)
                                 link = self._normalize(link)

@@ -93,12 +93,9 @@ class Crawler(_Crawler):
 
                 self._add_graph(url, None)
 
-                page = str(response.read())
-                pattern = '<a [^>]*href=[\'|"](.*?)[\'"].*?>'
-
                 links = []
 
-                for match in re.findall(pattern, page):
+                for match in self._extract_urls(str(response.read())):
                     for link in match.split():
                         is_url = self._is_url(link)
                         link = self._normalize(link)
