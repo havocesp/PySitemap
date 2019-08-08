@@ -15,6 +15,7 @@ from pysitemap.abc_crawler import _Crawler
 
 class Crawler(_Crawler):
     DEFAULT_TIMEOUT = ClientTimeout(total=5*60)
+    AF_INET = 2
 
     def __init__(self, url, exclude=None, domain=None, no_verbose=False, request_header=None, timeout=DEFAULT_TIMEOUT,
                  retry_times=1, max_requests=100, build_graph=False, verify_ssl=False, max_redirects=10,
@@ -152,7 +153,9 @@ class Crawler(_Crawler):
             if self._timeout:
                 async with ClientSession(timeout=self._timeout,
                                          headers=self._request_headers,
-                                         connector=TCPConnector(verify_ssl=self._verify_ssl)) as session:
+                                         connector=TCPConnector(verify_ssl=self._verify_ssl,
+                                                                use_dns_cache=False,
+                                                                family=self.AF_INET)) as session:
                     return await asyncio.gather(*[asyncio.create_task(__fetch(session, url)) for url in urls])
 
         loop = asyncio.get_event_loop()
