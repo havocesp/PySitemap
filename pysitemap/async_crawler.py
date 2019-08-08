@@ -135,7 +135,7 @@ class Crawler(_Crawler):
                     async with session.get(url, max_redirects=self._max_redirects) as response:
                         response.raise_for_status()
                         return url, response.url.human_repr(), await response.read()
-                except TooManyRedirects:
+                except TooManyRedirects as e:
                     if not self._no_verbose:
                         print("Couldn't get", url, 'there were too many redirection. Error=', e)
                 except (ClientResponseError, ClientError, ClientConnectionError, ClientOSError,
