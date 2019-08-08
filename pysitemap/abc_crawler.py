@@ -120,7 +120,7 @@ class _Crawler(ABC):
         scheme, netloc, path, qs, anchor = urlsplit(url)
         # print(url, ' ', scheme, ' ', netloc, ' ', path, ' ', qs, ' ', anchor)
         anchor = ''
-        if scheme == 'https':
+        if scheme == 'https' or scheme == '':
             scheme = 'http'
         if not netloc.startswith('www.'):
             netloc = 'www.' + netloc
