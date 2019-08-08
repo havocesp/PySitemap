@@ -50,7 +50,10 @@ _module_root_dir = None
 def _get_module_root_dir():
     global _module_root_dir
     if not _module_root_dir:
-        _module_root_dir = os.path.dirname(sys.modules['__main__'].__file__)
+        try:
+            _module_root_dir = os.path.dirname(sys.modules['__main__'].__file__)
+        except AttributeError:
+            _module_root_dir = os.path.dirname(os.path.abspath(__file__))
     return _module_root_dir
 
 
