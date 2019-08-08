@@ -117,18 +117,19 @@ class _Crawler(ABC):
     def _normalize(self, url):
         try:
             from url_normalize import url_normalize
-            return url_normalize(url, default_scheme='http')
+            url = url_normalize(url, default_scheme='http')
         except ModuleNotFoundError:
-            if url.endswith('/'):
-                url = url[:-1]
-            scheme, netloc, path, qs, anchor = urlsplit(url)
-            # print(url, ' ', scheme, ' ', netloc, ' ', path, ' ', qs, ' ', anchor)
-            anchor = ''
-            if scheme == 'https' or scheme == '':
-                scheme = 'http'
-            if not netloc.startswith('www.'):
-                netloc = 'www.' + netloc
-            return urlunsplit((scheme, netloc, path, qs, anchor))
+            pass
+        if url.endswith('/'):
+            url = url[:-1]
+        scheme, netloc, path, qs, anchor = urlsplit(url)
+        # print(url, ' ', scheme, ' ', netloc, ' ', path, ' ', qs, ' ', anchor)
+        anchor = ''
+        if scheme == 'https' or scheme == '':
+            scheme = 'http'
+        if not netloc.startswith('www.'):
+            netloc = 'www.' + netloc
+        return urlunsplit((scheme, netloc, path, qs, anchor))
 
     def _is_internal(self, url):
         host = urlsplit(url).netloc
