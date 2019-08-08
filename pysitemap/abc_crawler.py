@@ -83,7 +83,7 @@ class _Crawler(ABC):
     _pattern = '<a [^>]*href=[\'|"](.*?)[\'"].*?>'
 
     def _extract_urls(self, html):
-        re.findall(self._pattern, html)
+        return re.findall(self._pattern, html)
 
     def _url_excluded(self, url):
         excluded = False
