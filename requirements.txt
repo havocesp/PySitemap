@@ -4,4 +4,4 @@ aiohttp==3.7.4
 
 # Only used if visualizing sitemap in a graph:
 networkx==2.3
-ujson==1.35
+ujson==5.4.0
