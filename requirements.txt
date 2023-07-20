@@ -1,6 +1,6 @@
 # Used only if async_crawler is used:
 tldextract==2.2.1
-aiohttp==3.7.4
+aiohttp==3.8.5
 
 # Only used if visualizing sitemap in a graph:
 networkx==2.3
