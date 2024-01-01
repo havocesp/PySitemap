@@ -61,8 +61,7 @@ class Crawler(_Crawler):
             if not self._no_verbose:
                 print('Found:', len(self._graph.keys()), 'Parsing:', url)
 
-            response = self._request(url)
-            if response:
+            if response := self._request(url):
                 step = 0
                 if self._max_steps_depth and url in steps:
                     step = steps[url] + 1

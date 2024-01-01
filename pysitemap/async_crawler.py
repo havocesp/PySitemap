@@ -55,8 +55,7 @@ class Crawler(_Crawler):
             if not self._no_verbose:
                 print('Found:', len(self._graph.keys()), 'Parsing:', urls)
 
-            responses = self._request(urls)
-            if responses:
+            if responses := self._request(urls):
                 for (requested_url, url, html) in responses:
                     if self._stop:
                         return

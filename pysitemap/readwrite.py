@@ -84,8 +84,7 @@ def save_graph(graph, save_path=_get_module_root_dir(), no_verbose=False):
         return
     if not save_path.endswith('/'):
         save_path += '/'
-    graph = _ensure_right_type(graph)
-    if graph is None:
+    if (graph := _ensure_right_type(graph)) is None:
         if not no_verbose:
             print('Failed to save graph. graph should be a dict or networkx.classes.digraph.DiGraph', graph)
         return
@@ -122,8 +121,7 @@ def export_graph(graph, save_path=_get_module_root_dir(), no_verbose=False):
         return
     if not save_path.endswith('/'):
         save_path += '/'
-    graph = _ensure_right_type(graph)
-    if graph is None:
+    if (graph := _ensure_right_type(graph)) is None:
         if not no_verbose:
             print('Failed to export graph. graph should be a dict or networkx.classes.digraph.DiGraph', graph)
         return
